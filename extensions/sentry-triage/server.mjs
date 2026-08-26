@@ -385,7 +385,9 @@ export function startServer({ port = 0, onRefresh, onAction, onWorkSelected, onR
         // the stale annotations now, invalidate any pending enrichment, and
         // re-derive against the new repo. Model/base-branch-only edits keep them.
         const repoId = (t) =>
-          [t.cloud.repo, t.local.path, t.local.projectId].map((v) => (v || '').trim()).join('\u0000')
+          [t.mode, t.cloud.repo, t.local.path, t.local.projectId, t.local.repo]
+            .map((v) => (v || '').trim())
+            .join('\u0000')
         const repoChanged = repoId(next) !== repoId(current)
         state.setPrTargets(next)
         if (repoChanged) {
