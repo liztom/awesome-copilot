@@ -22,32 +22,62 @@ function safeSentryUrl(value) {
   return ''
 }
 
-// True iff `value` is an http(s) URL whose HOST is exactly `allowedHost` AND
-// whose path is a GitHub issue/PR in exactly `expectedRepo` (owner/repo), i.e.
-// https://<allowedHost>/<owner>/<repo>/(issues|pull)/<n>. Validating the host as
-// well as owner/repo is essential: a path-only check would accept a look-alike
-// like https://attacker.example/<owner>/<repo>/pull/1 and let a model-reported
-// link masquerade as living in the authorized repository. `expectedRepo` and
-// `allowedHost` come from trusted config (Settings / local git / env), never from
-// the model or Sentry. Any parse failure, host mismatch, or shape mismatch → false
-// (fail closed).
-function urlInRepo(value, expectedRepo, allowedHost) {
-  if (!expectedRepo || !allowedHost) return false
+// Path shapes for the GitHub artifact kinds we validate. Anchoring on the exact
+// segment matters for correctness AND safety: a PR URL must never pass as an
+// issue, and — critically — an issue URL must never be trusted as a PR and mint a
+// bogus "PR #N" badge. `any` is only for soft "related" hints that may be either.
+const REPO_REF_PATTERNS = {
+  issue: /^\/([^/]+)\/([^/]+)\/issues\/(\d+)/,
+  pull: /^\/([^/]+)\/([^/]+)\/pull\/(\d+)/,
+  any: /^\/([^/]+)\/([^/]+)\/(?:issues|pull)\/(\d+)/,
+}
+
+// Parse a model-reported URL and return its numeric id ONLY when it is an http(s)
+// URL whose HOST is exactly `allowedHost` and whose path is a GitHub artifact of
+// the requested `kind` in exactly `expectedRepo` (owner/repo), i.e.
+// https://<allowedHost>/<owner>/<repo>/(issues|pull)/<n>. Returns null on any
+// parse failure, host mismatch, repo mismatch, or shape mismatch (fail closed).
+// Validating the host as well as owner/repo is essential: a path-only check would
+// accept a look-alike like https://attacker.example/<owner>/<repo>/pull/1 and let
+// a model-reported link masquerade as living in the authorized repository.
+// `expectedRepo` and `allowedHost` come from trusted config (Settings / local git
+// / env), never from the model or Sentry.
+function repoRefNumber(value, expectedRepo, allowedHost, kind = 'any') {
+  if (!expectedRepo || !allowedHost) return null
   const href = safeSentryUrl(value)
-  if (!href) return false
+  if (!href) return null
   try {
     const url = new URL(href)
-    if (url.hostname.toLowerCase() !== String(allowedHost).toLowerCase()) return false
-    const m = url.pathname.match(/^\/([^/]+)\/([^/]+)\/(?:issues|pull)\/\d+/)
-    return !!m && `${m[1]}/${m[2]}`.toLowerCase() === String(expectedRepo).toLowerCase()
+    if (url.hostname.toLowerCase() !== String(allowedHost).toLowerCase()) return null
+    const m = url.pathname.match(REPO_REF_PATTERNS[kind] || REPO_REF_PATTERNS.any)
+    if (!m || `${m[1]}/${m[2]}`.toLowerCase() !== String(expectedRepo).toLowerCase()) return null
+    return Number(m[3])
   } catch {
-    return false
+    return null
   }
 }
 
-// Validate a candidate GitHub "owner/repo"; '' when blank/malformed (fails closed).
+// Boolean form: does `value` point at a GitHub artifact of `kind` in the expected
+// repo on the trusted host? Fails closed (false) on any mismatch.
+function urlInRepo(value, expectedRepo, allowedHost, kind = 'any') {
+  return repoRefNumber(value, expectedRepo, allowedHost, kind) !== null
+}
+
+// Validate a candidate GitHub "owner/repo" and return it lowercased, or '' when
+// blank/malformed (fails closed). Restrict each component to the characters GitHub
+// actually allows so a masquerading slug — `owner/repo?tab=x`, `owner/#frag`,
+// `owner/..`, or one carrying a path/query/fragment — can't slip through a lax
+// "one slash" check and authorize a write. Owner: alphanumerics and hyphens, no
+// leading/trailing hyphen, <=39 chars. Repo: alphanumerics plus `.`, `-`, `_`,
+// <=100 chars, but never the reserved `.` or `..` segments.
 function normalizeRepo(value) {
-  return /^[^/\s]+\/[^/\s]+$/.test(String(value || '')) ? String(value).toLowerCase() : ''
+  const raw = String(value || '').trim()
+  const m = /^([A-Za-z0-9-]{1,39})\/([A-Za-z0-9._-]{1,100})$/.exec(raw)
+  if (!m) return ''
+  const [, owner, repo] = m
+  if (owner.startsWith('-') || owner.endsWith('-')) return ''
+  if (repo === '.' || repo === '..') return ''
+  return raw.toLowerCase()
 }
 
 // Derive the two repo anchors the split-repo model enforces, from TRUSTED canvas
@@ -960,19 +990,23 @@ ${items.map((i) => `${i.key}: ${i.title}`).join('\n')}`
         for (const [issueKey, info] of Object.entries(tracking)) {
           if (!validKeys.has(issueKey)) continue
           if (!info || typeof info !== 'object') continue
-          // The tracking ISSUE is the source of truth: its URL must validate against
-          // the issue repo or the whole record is worthless — drop it.
-          if (!urlInRepo(info.issueUrl, trackExpectedRepo, allowedHost)) continue
-          // Trust the PR's pr* fields ONLY when a concrete prUrl validates against the
-          // PR anchor (which can differ from the issue repo in split-repo local mode).
-          // A model-reported prNumber/prState with NO url, or a url that doesn't match,
-          // is unverifiable: strip EVERY pr* field (the card renders a badge from
-          // prNumber alone, and prState alone can keep a closed issue "tracked") but
-          // KEEP the authorized issue, so a bad/absent PR neither mints an active badge
-          // nor discards the independently-valid issue.
-          const prVerified = Boolean(info.prUrl) && urlInRepo(info.prUrl, trackPrExpectedRepo, allowedHost)
-          const record = prVerified
-            ? info
+          // The tracking ISSUE is the source of truth: its URL must be an issue in
+          // the issue repo or the whole record is worthless — drop it. Require the
+          // `/issues/<n>` shape so a PR URL can't masquerade as the issue.
+          if (!urlInRepo(info.issueUrl, trackExpectedRepo, allowedHost, 'issue')) continue
+          // Trust the PR's pr* fields ONLY when a concrete prUrl is a `/pull/<n>` in
+          // the PR anchor (which can differ from the issue repo in split-repo local
+          // mode). A model-reported prNumber/prState with NO url, an issue URL, or a
+          // url in the wrong repo is unverifiable: strip EVERY pr* field (the card
+          // renders a badge from prNumber alone, and prState alone can keep a closed
+          // issue "tracked") but KEEP the authorized issue. Derive prNumber from the
+          // validated URL itself so a mismatched model-reported number can never
+          // render a badge pointing at a different PR than the one we verified.
+          const verifiedPrNumber = info.prUrl
+            ? repoRefNumber(info.prUrl, trackPrExpectedRepo, allowedHost, 'pull')
+            : null
+          const record = verifiedPrNumber !== null
+            ? { ...info, prNumber: verifiedPrNumber }
             : { issueNumber: info.issueNumber, issueUrl: info.issueUrl, issueState: info.issueState }
           entry.state.setTrackedWorkStatus(issueKey, record)
         }
@@ -1341,13 +1375,22 @@ async function onWorkSelected(entry, issueKeys, modelByKey, assignCopilot) {
   // so it needs a concrete issue-repo anchor. Only a tracking-only run on a
   // non-GitHub tracker (Linear/Jira) performs no GitHub write, so it may proceed
   // without a repo anchor. Normal checkouts resolve a repo from the git remote;
-  // this trips only when detection fails or no target is configured — tell the
-  // user to set one rather than writing unverifiably.
-  if ((isGithubTracker && !expectedRepo) || (wantsCopilot && !prExpectedRepo)) {
+  // this trips only when detection fails or a target lacks a valid repo. The two
+  // failures have different fixes, so report the one that actually bit: a missing
+  // ISSUE anchor means no target repo is configured (fix in Settings), while a
+  // missing PR anchor with a VALID issue repo means the explicitly selected local
+  // project has empty/malformed repo metadata that Settings can't edit — the fix
+  // there is to pick a project with a valid owner/repo (or use Current project).
+  const missingIssueRepo = isGithubTracker && !expectedRepo
+  const missingPrRepo = wantsCopilot && !prExpectedRepo
+  if (missingIssueRepo || missingPrRepo) {
+    const error = missingIssueRepo
+      ? 'No target repository is configured, so issue creation cannot be verified. Set a target repository in Settings before starting work.'
+      : 'The selected project has no valid repository (owner/repo), so the pull request destination cannot be verified. Choose a project with valid repository metadata — or use Current project — before starting work.'
     for (const key of startableKeys) {
       entry.notifyWork(key, {
         phase: 'error',
-        error: 'No target repository is configured, so issue/PR creation cannot be verified. Set a target repository in Settings before starting work.',
+        error,
       })
     }
     return
@@ -1491,10 +1534,10 @@ async function onWorkSelected(entry, issueKeys, modelByKey, assignCopilot) {
         // Each check is gated on its own anchor, so an empty anchor ('') skips just
         // that artifact (failing closed for it) instead of shadowing the other.
         const dedupArtifacts = [
-          ...(isGithubTracker && expectedRepo ? [['issue', result.existingIssueUrl, expectedRepo]] : []),
-          ...(prExpectedRepo ? [['pull request', result.existingPrUrl, prExpectedRepo]] : []),
+          ...(isGithubTracker && expectedRepo ? [['issue', result.existingIssueUrl, expectedRepo, 'issue']] : []),
+          ...(prExpectedRepo ? [['pull request', result.existingPrUrl, prExpectedRepo, 'pull']] : []),
         ].filter(([, url]) => url)
-        const bad = dedupArtifacts.find(([, url, anchor]) => !urlInRepo(url, anchor, allowedHost))
+        const bad = dedupArtifacts.find(([, url, anchor, kind]) => !urlInRepo(url, anchor, allowedHost, kind))
         if (bad) {
           entry.notifyWork(key, {
             phase: 'error',
@@ -1587,7 +1630,7 @@ async function onWorkSelected(entry, issueKeys, modelByKey, assignCopilot) {
       // so `prUrl` is validated against `prExpectedRepo` whenever a concrete PR
       // anchor is known. The placeholder-repo case (no concrete anchor) has nothing
       // to compare against.
-      if (isGithubTracker && expectedRepo && result.issueUrl && !urlInRepo(result.issueUrl, expectedRepo, allowedHost)) {
+      if (isGithubTracker && expectedRepo && result.issueUrl && !urlInRepo(result.issueUrl, expectedRepo, allowedHost, 'issue')) {
         workRegistry.delete(workToken)
         entry.notifyWork(key, {
           phase: 'error',
@@ -1595,7 +1638,7 @@ async function onWorkSelected(entry, issueKeys, modelByKey, assignCopilot) {
         })
         continue
       }
-      if (prExpectedRepo && result.prUrl && !urlInRepo(result.prUrl, prExpectedRepo, allowedHost)) {
+      if (prExpectedRepo && result.prUrl && !urlInRepo(result.prUrl, prExpectedRepo, allowedHost, 'pull')) {
         workRegistry.delete(workToken)
         entry.notifyWork(key, {
           phase: 'error',
@@ -1889,7 +1932,7 @@ const session = await joinSession({
         // here because onWorkSelected refuses to start GitHub work without one.
         const regRepo = registered.authorizedRepo || ''
         const regHost = registered.authorizedHost || ''
-        if (regRepo && !urlInRepo(prUrl, regRepo, regHost)) {
+        if (regRepo && !urlInRepo(prUrl, regRepo, regHost, 'pull')) {
           return `Ignored: the reported PR for ${key} is not in the expected repository (${regRepo}).`
         }
         workRegistry.delete(workToken)
