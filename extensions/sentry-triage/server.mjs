@@ -370,6 +370,7 @@ export function startServer({ port = 0, onRefresh, onAction, onWorkSelected, onR
             baseBranch: pick(payload.localBranch, current.local.baseBranch),
             projectId: pick(payload.localProjectId, current.local.projectId),
             projectName: pick(payload.localProjectName, current.local.projectName),
+            repo: pick(payload.localProjectRepo, current.local.repo),
           },
           cloud: {
             repo: pick(payload.cloudRepo, current.cloud.repo),
