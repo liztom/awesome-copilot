@@ -25,11 +25,14 @@ function safeSentryUrl(value) {
 // Path shapes for the GitHub artifact kinds we validate. Anchoring on the exact
 // segment matters for correctness AND safety: a PR URL must never pass as an
 // issue, and — critically — an issue URL must never be trusted as a PR and mint a
-// bogus "PR #N" badge. `any` is only for soft "related" hints that may be either.
+// bogus "PR #N" badge. The `(?:\/|$)` boundary after the id is required so a
+// look-alike like `/pull/123evil` or `/issues/7anything` can't be truncated to a
+// valid id — only the exact artifact path or one of its subpaths validates. `any`
+// is only for soft "related" hints that may be either kind.
 const REPO_REF_PATTERNS = {
-  issue: /^\/([^/]+)\/([^/]+)\/issues\/(\d+)/,
-  pull: /^\/([^/]+)\/([^/]+)\/pull\/(\d+)/,
-  any: /^\/([^/]+)\/([^/]+)\/(?:issues|pull)\/(\d+)/,
+  issue: /^\/([^/]+)\/([^/]+)\/issues\/(\d+)(?:\/|$)/,
+  pull: /^\/([^/]+)\/([^/]+)\/pull\/(\d+)(?:\/|$)/,
+  any: /^\/([^/]+)\/([^/]+)\/(?:issues|pull)\/(\d+)(?:\/|$)/,
 }
 
 // Parse a model-reported URL and return its numeric id ONLY when it is an http(s)
@@ -41,7 +44,9 @@ const REPO_REF_PATTERNS = {
 // accept a look-alike like https://attacker.example/<owner>/<repo>/pull/1 and let
 // a model-reported link masquerade as living in the authorized repository.
 // `expectedRepo` and `allowedHost` come from trusted config (Settings / local git
-// / env), never from the model or Sentry.
+// / env), never from the model or Sentry. The id must be a positive safe integer:
+// an unbounded digit run can parse to Infinity or a precision-losing value, and
+// any non-null result here is treated as verified, so reject those too.
 function repoRefNumber(value, expectedRepo, allowedHost, kind = 'any') {
   if (!expectedRepo || !allowedHost) return null
   const href = safeSentryUrl(value)
@@ -51,7 +56,9 @@ function repoRefNumber(value, expectedRepo, allowedHost, kind = 'any') {
     if (url.hostname.toLowerCase() !== String(allowedHost).toLowerCase()) return null
     const m = url.pathname.match(REPO_REF_PATTERNS[kind] || REPO_REF_PATTERNS.any)
     if (!m || `${m[1]}/${m[2]}`.toLowerCase() !== String(expectedRepo).toLowerCase()) return null
-    return Number(m[3])
+    const n = Number(m[3])
+    if (!Number.isSafeInteger(n) || n <= 0) return null
+    return n
   } catch {
     return null
   }
@@ -85,24 +92,31 @@ function normalizeRepo(value) {
 // model or injected Sentry text):
 //   - expectedRepo:   where the tracking ISSUE is filed (the issue/cloud repo).
 //   - prExpectedRepo: where the fix session opens its PR.
-// They can differ. In local PR mode with an EXPLICITLY selected registered project
-// (prTargets.local.projectId set), the fix session runs in THAT project, so the PR
-// lands in its config-time repo (prTargets.local.repo, frozen when the user picked
-// the project in Settings — NOT re-read from the model-relayed project list at work
-// time, which is refreshed inside the same turn that ingests untrusted Sentry data).
-// If an explicitly selected project's repo is empty or malformed we FAIL CLOSED
-// (prExpectedRepo='') rather than silently authorizing an UNRELATED repo (e.g. the
-// issue repo) for the PR — the caller's preflight then blocks until that project's
-// repo is known. Only the current-project / cloud fallback (no explicit project
-// selected) anchors the PR on the issue repo. Both values are '' unless a concrete
-// "owner/repo" resolves.
-function deriveRepoAnchors(prTargets, issueRepo) {
+// They can differ, and the PR anchor depends on WHERE the fix session runs:
+//   - Cloud mode: the session runs on the cloud repo, where the issue is also
+//     filed, so the PR anchor is the issue repo.
+//   - Local mode with an EXPLICITLY selected registered project (local.projectId
+//     set): the session runs in THAT project, so the PR lands in its config-time
+//     repo (local.repo, frozen when the user picked it in Settings — NOT re-read
+//     from the model-relayed project list at work time, which is refreshed inside
+//     the same turn that ingests untrusted Sentry data). If that repo is empty or
+//     malformed we FAIL CLOSED (prExpectedRepo='') rather than silently authorizing
+//     an unrelated repo; the caller's preflight then blocks.
+//   - Local mode with "Current project" (no explicit selection): the session runs
+//     in the canvas's OWN checkout, so the PR lands in the trusted current-project
+//     repo (`currentProjectRepo`, seeded from the session cwd's git remote) — NOT
+//     the issue repo, which Settings may point at a separate cloud repo. Using the
+//     issue repo here would make dedup search the wrong repo and reject the real
+//     PR callback.
+// Both values are '' unless a concrete "owner/repo" resolves.
+function deriveRepoAnchors(prTargets, issueRepo, currentProjectRepo) {
   const expectedRepo = normalizeRepo(issueRepo)
-  const isLocalMode = prTargets?.mode !== 'cloud'
-  const localProjectSelected = isLocalMode && Boolean(prTargets?.local?.projectId)
+  const isCloudMode = prTargets?.mode === 'cloud'
+  if (isCloudMode) return { expectedRepo, prExpectedRepo: expectedRepo }
+  const localProjectSelected = Boolean(prTargets?.local?.projectId)
   const prExpectedRepo = localProjectSelected
     ? normalizeRepo(prTargets?.local?.repo)
-    : expectedRepo
+    : normalizeRepo(currentProjectRepo)
   return { expectedRepo, prExpectedRepo }
 }
 
@@ -528,7 +542,7 @@ function buildWorkPrompt({ key, issue, org, prTargets, model: modelOverride, ass
   // explicitly selected project is that project's repo — NOT the issue repo. Use
   // this PR-repo anchor for the Step-0 open-PR dedup search; issue lookup/creation
   // stays on the issue repo (targetRepo). Mirrors the enforcement in onWorkSelected.
-  const { prExpectedRepo } = deriveRepoAnchors(prTargets, issueRepo)
+  const { prExpectedRepo } = deriveRepoAnchors(prTargets, issueRepo, defaults.repo)
   const prSearchRepo = prExpectedRepo || targetRepo
   const plain = sanitizeForPrompt(issue.plainEnglish || issue.summary || 'User-visible failure in production', 200)
   const issueTitle = `[sentry-triage][${key}] ${plain}`.slice(0, 120)
@@ -881,7 +895,7 @@ Also, in the SAME turn, silently load the user's registered app projects for the
   // Issue vs PR repo split for enrichment: the tracking ISSUE lives in trackRepo,
   // but its linked PR can live in the selected project's repo (see
   // deriveRepoAnchors). Validate each reported URL against its own anchor below.
-  const { prExpectedRepo: trackPrExpectedRepo } = deriveRepoAnchors(trackPrTargets, trackRepo)
+  const { prExpectedRepo: trackPrExpectedRepo } = deriveRepoAnchors(trackPrTargets, trackRepo, runtimeDefaults.repo)
   const trackPrRepo = trackPrExpectedRepo || trackRepo
   const needTracking = !!trackRepo
   const trackingToken = needTracking ? makeTrackingToken() : ''
@@ -992,8 +1006,11 @@ ${items.map((i) => `${i.key}: ${i.title}`).join('\n')}`
           if (!info || typeof info !== 'object') continue
           // The tracking ISSUE is the source of truth: its URL must be an issue in
           // the issue repo or the whole record is worthless — drop it. Require the
-          // `/issues/<n>` shape so a PR URL can't masquerade as the issue.
-          if (!urlInRepo(info.issueUrl, trackExpectedRepo, allowedHost, 'issue')) continue
+          // `/issues/<n>` shape so a PR URL can't masquerade as the issue, and derive
+          // issueNumber from that validated URL so a mismatched model-reported number
+          // can't render "issue #999" while linking to a different /issues/<n>.
+          const verifiedIssueNumber = repoRefNumber(info.issueUrl, trackExpectedRepo, allowedHost, 'issue')
+          if (verifiedIssueNumber === null) continue
           // Trust the PR's pr* fields ONLY when a concrete prUrl is a `/pull/<n>` in
           // the PR anchor (which can differ from the issue repo in split-repo local
           // mode). A model-reported prNumber/prState with NO url, an issue URL, or a
@@ -1006,8 +1023,8 @@ ${items.map((i) => `${i.key}: ${i.title}`).join('\n')}`
             ? repoRefNumber(info.prUrl, trackPrExpectedRepo, allowedHost, 'pull')
             : null
           const record = verifiedPrNumber !== null
-            ? { ...info, prNumber: verifiedPrNumber }
-            : { issueNumber: info.issueNumber, issueUrl: info.issueUrl, issueState: info.issueState }
+            ? { ...info, issueNumber: verifiedIssueNumber, prNumber: verifiedPrNumber }
+            : { issueNumber: verifiedIssueNumber, issueUrl: info.issueUrl, issueState: info.issueState }
           entry.state.setTrackedWorkStatus(issueKey, record)
         }
       }
@@ -1356,7 +1373,7 @@ async function onWorkSelected(entry, issueKeys, modelByKey, assignCopilot) {
   // the outside-the-model URL enforcement for its own artifact: only a well-formed
   // "owner/repo" anchor can validate a model-reported artifact URL, so a blank or
   // malformed value resolves to '' (fails closed — no URL check, and blocked below).
-  const { expectedRepo, prExpectedRepo } = deriveRepoAnchors(prTargets, issueRepo)
+  const { expectedRepo, prExpectedRepo } = deriveRepoAnchors(prTargets, issueRepo, runtimeDefaults.repo)
   // Trusted host the authorized issue/PR links must live on, paired with
   // `expectedRepo`. Repo alone is not enough: a look-alike host would otherwise
   // let a model-reported link pass the repo check (see urlInRepo). Sourced from
@@ -1378,15 +1395,18 @@ async function onWorkSelected(entry, issueKeys, modelByKey, assignCopilot) {
   // this trips only when detection fails or a target lacks a valid repo. The two
   // failures have different fixes, so report the one that actually bit: a missing
   // ISSUE anchor means no target repo is configured (fix in Settings), while a
-  // missing PR anchor with a VALID issue repo means the explicitly selected local
-  // project has empty/malformed repo metadata that Settings can't edit — the fix
-  // there is to pick a project with a valid owner/repo (or use Current project).
+  // missing PR anchor with a VALID issue repo means the resolved PR project has
+  // empty/malformed repo metadata. That happens two ways: an explicitly selected
+  // local project whose config-time repo is blank/malformed (fix: pick a project
+  // with a valid owner/repo), or "Current project" running in a checkout with no
+  // detectable GitHub remote (fix: run from a repo-backed checkout). Both share a
+  // message that names either remedy.
   const missingIssueRepo = isGithubTracker && !expectedRepo
   const missingPrRepo = wantsCopilot && !prExpectedRepo
   if (missingIssueRepo || missingPrRepo) {
     const error = missingIssueRepo
       ? 'No target repository is configured, so issue creation cannot be verified. Set a target repository in Settings before starting work.'
-      : 'The selected project has no valid repository (owner/repo), so the pull request destination cannot be verified. Choose a project with valid repository metadata — or use Current project — before starting work.'
+      : 'The pull request destination has no valid repository (owner/repo), so it cannot be verified. Select a project with valid repository metadata, or open this canvas from a checkout with a GitHub remote, before starting work.'
     for (const key of startableKeys) {
       entry.notifyWork(key, {
         phase: 'error',
