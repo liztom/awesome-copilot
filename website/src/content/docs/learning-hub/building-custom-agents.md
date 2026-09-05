@@ -3,7 +3,7 @@ title: 'Building Custom Agents'
 description: 'Learn how to create specialized GitHub Copilot agents with custom personas, tool integrations, and domain expertise.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-08-09
+lastUpdated: 2026-09-05
 estimatedReadingTime: '10 minutes'
 tags:
   - agents
@@ -81,6 +81,34 @@ name: 'Security Reviewer'
 description: 'Thorough security audit for OWASP vulnerabilities'
 model: Claude Sonnet 4
 reasoningEffort: high
+tools: ['codebase', 'terminal', 'github']
+---
+```
+
+**model** *(v1.0.83+)*: In addition to a single model name, `model` can now be a **list** of models. Copilot tries each one in order and uses the first that's available to you — useful when an agent should prefer a specific model but gracefully fall back if that model isn't accessible (e.g., not yet rolled out to your account or temporarily unavailable):
+
+```yaml
+---
+name: 'Security Reviewer'
+description: 'Expert security auditor for OWASP vulnerabilities and authentication flaws'
+model:
+  - Claude Sonnet 5
+  - Claude Sonnet 4
+  - GPT-5.6
+tools: ['codebase', 'terminal', 'github']
+---
+```
+
+**model-policy** *(v1.0.83+)*: Set to `required` alongside a `model` list to **lock** model changes to that list for the duration of the session — the user cannot switch to a model outside the declared set via `/model`. This is useful for agents that depend on a specific model's capabilities (e.g., a security reviewer that should only ever run on higher-reasoning models):
+
+```yaml
+---
+name: 'Security Reviewer'
+description: 'Expert security auditor for OWASP vulnerabilities and authentication flaws'
+model:
+  - Claude Sonnet 5
+  - Claude Sonnet 4
+model-policy: required
 tools: ['codebase', 'terminal', 'github']
 ---
 ```
