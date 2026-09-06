@@ -3,7 +3,7 @@ title: 'Building Custom Agents'
 description: 'Learn how to create specialized GitHub Copilot agents with custom personas, tool integrations, and domain expertise.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-08-09
+lastUpdated: 2026-09-06
 estimatedReadingTime: '10 minutes'
 tags:
   - agents
@@ -261,6 +261,23 @@ The agent can then query your database, analyze query plans, and suggest optimiz
 | Code-specialized tasks, large context | kimi-k2.7-code *(v1.0.68+)*, kimi-k3 *(v1.0.79+)* |
 | Quick analysis, simple tasks | Claude Haiku or GPT-4.1-mini |
 | Large codebase understanding | Models with larger context windows |
+
+**Model fallback lists** *(v1.0.83+)*: `model` can also be a list of models, tried in order until one is available to your account. Combine this with `model-policy: required` to keep any manual model switch restricted to that same list, so the agent never silently drifts to an unrelated model:
+
+```yaml
+---
+name: 'Release Notes Writer'
+description: 'Summarizes merged PRs into user-facing release notes'
+model:
+  - Claude Sonnet 5
+  - Claude Sonnet 4
+  - GPT-5.6
+model-policy: required
+tools: ['codebase', 'github']
+---
+```
+
+This is useful for agents shared across a team or org where not everyone has access to the same models—the agent degrades gracefully instead of failing outright.
 
 ### Organizing Agents in Your Repository
 
