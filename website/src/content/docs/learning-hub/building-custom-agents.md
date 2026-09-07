@@ -85,6 +85,20 @@ tools: ['codebase', 'terminal', 'github']
 ---
 ```
 
+**model** *(v1.0.83+)*: Instead of a single model, you can list several models in order of preference. The CLI tries each one in turn and uses the first that's available to the current user, which is useful for agents shared across a team where not everyone has access to the same models:
+
+```yaml
+---
+name: 'Security Reviewer'
+description: 'Thorough security audit for OWASP vulnerabilities'
+model: [Claude Sonnet 4.5, GPT-5.6, Claude Sonnet 4]
+model-policy: required
+tools: ['codebase', 'terminal', 'github']
+---
+```
+
+**model-policy** *(v1.0.83+)*: Set to `required` alongside a `model` list to keep the agent pinned to that list — the user cannot switch to a model outside it mid-session with `/model`. Omit this field if you want the list to act only as a starting preference that users can freely override.
+
 **tools** (recommended): An array of built-in tools and MCP servers the agent can access. Common tools include:
 
 | Tool | Purpose |
