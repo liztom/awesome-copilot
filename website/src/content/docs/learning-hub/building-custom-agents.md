@@ -3,7 +3,7 @@ title: 'Building Custom Agents'
 description: 'Learn how to create specialized GitHub Copilot agents with custom personas, tool integrations, and domain expertise.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-08-09
+lastUpdated: 2026-09-09
 estimatedReadingTime: '10 minutes'
 tags:
   - agents
@@ -72,6 +72,20 @@ tools: ['codebase', 'terminal', 'github']
 **description** (required): A clear summary of what the agent does. This is shown in the agent picker and helps users find the right agent.
 
 **model** (recommended): The AI model that powers the agent. Choose based on the complexity of the task—use more capable models for nuanced reasoning.
+
+**Multiple models with fallback** *(v1.0.83+)*: Instead of a single model, `model` can list several models, tried in order until one is available to you. This is useful when your preferred model may be rate-limited or temporarily unavailable:
+
+```yaml
+---
+name: 'Security Reviewer'
+description: 'Expert security auditor for OWASP vulnerabilities'
+model: ['Claude Sonnet 5', 'Claude Sonnet 4', 'GPT-5.6']
+model-policy: required
+tools: ['codebase', 'terminal', 'github']
+---
+```
+
+Set `model-policy: required` to keep model changes restricted to models on that list — the agent will not fall back to an arbitrary model outside the ones you specified.
 
 **reasoningEffort** *(v1.0.66+)*: Override the reasoning effort level for this agent. Accepted values are `low`, `medium`, and `high`. This lets you pin specific agents to a cost/quality tradeoff regardless of the user's global setting — for example, a quick code-formatting agent can use `low` effort, while a security reviewer uses `high`:
 
@@ -254,8 +268,8 @@ The agent can then query your database, analyze query plans, and suggest optimiz
 
 | Scenario | Recommended Model |
 |----------|-------------------|
-| Most demanding reasoning, security review | Claude Sonnet 5 *(v1.0.67+)* |
-| Complex reasoning, analysis | Claude Sonnet 4 |
+| Most demanding reasoning, security review | Claude Sonnet 5 *(v1.0.67+)*, GPT-6 Astra *(v1.0.84+)* |
+| Complex reasoning, analysis | Claude Sonnet 4, Claude Fable 5.1 *(v1.0.83+)* |
 | Code generation, tool-driven agentic work | GPT-5.6 *(v1.0.70+)* |
 | Code generation, refactoring | GPT-4.1 |
 | Code-specialized tasks, large context | kimi-k2.7-code *(v1.0.68+)*, kimi-k3 *(v1.0.79+)* |

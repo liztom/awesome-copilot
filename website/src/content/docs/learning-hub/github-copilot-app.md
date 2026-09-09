@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-09
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -56,6 +56,10 @@ The Copilot app includes built-in automations that can run scheduled tasks for y
 
 Automations run in the context of a repository, so they can access issues, pull requests, and code. You can also choose whether they run as a plan, an interactive session, or on autopilot.
 
+### Persistent Goals with `/goal`
+
+**`/goal`** *(v1.1.15+)* lets you set a persistent objective for autopilot to work towards in a local session, instead of re-typing the same intent after every follow-up. Once set, autopilot keeps steering its work toward that goal across multiple turns until you change or clear it, which is useful for longer-running tasks where you want the agent to keep making progress without you having to re-anchor its focus each time.
+
 ### Isolated Worktrees for Parallel Work
 
 Each session the Copilot app creates runs in its own **git worktree**—a real, isolated copy of your branch. This is critical for parallel agent work:
@@ -91,6 +95,8 @@ For a hands-on guide to building canvases with `/create-canvas`, see [Working wi
 - Create, edit, or remove your own **personal skills** directly in the app, without hand-authoring a `SKILL.md` file
 
 This makes Customize a good starting point if you want to extend the app's capabilities but don't need the full `copilot plugin` CLI workflow described in [Installing and Using Plugins](../installing-and-using-plugins/).
+
+> **Install MCP servers via deep link** *(v1.1.15+)*: You can now install an MCP server by opening a deep link, which takes you straight to a prefilled review form in Customize for confirmation before the server is added — a quicker path than browsing the catalog by hand when sharing a specific server with a teammate.
 
 ### Agent Merge
 
