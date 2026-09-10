@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-10
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -91,6 +91,12 @@ For a hands-on guide to building canvases with `/create-canvas`, see [Working wi
 - Create, edit, or remove your own **personal skills** directly in the app, without hand-authoring a `SKILL.md` file
 
 This makes Customize a good starting point if you want to extend the app's capabilities but don't need the full `copilot plugin` CLI workflow described in [Installing and Using Plugins](../installing-and-using-plugins/).
+
+You can also install an MCP server directly from a **deep link** *(v1.1.15+)*: opening the link shows a prefilled review form so you can confirm the server's details before adding it, rather than manually filling out a configuration form. The Customize connector catalog has also grown to include servers like Power BI, offering both a hosted remote connection and a local server option.
+
+### Autopilot Goals
+
+Use the `/goal` slash command *(v1.1.15+)* in a local session to set a persistent objective for autopilot to work towards. Instead of re-prompting after each step, the agent keeps the stated goal in view across turns. The composer's Goal pill shows live status (Active, Paused, Done) and expands to show the objective, a completion summary, pause reason, turn count, and AI Credits usage—so you can check in on a long-running autopilot task at a glance.
 
 ### Agent Merge
 
