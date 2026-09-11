@@ -3,7 +3,7 @@ title: 'Installing and Using Plugins'
 description: 'Learn how to find, install, and manage plugins that extend GitHub Copilot CLI with reusable agents, skills, hooks, and integrations.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-01
+lastUpdated: 2026-09-11
 relatedArticles:
   - ./building-custom-agents.md
   - ./creating-effective-skills.md
@@ -254,6 +254,8 @@ This opens an interactive list where each installed plugin and its components ar
 > **Note**: Enabling and disabling hooks and LSP servers individually is temporarily unavailable following the `/plugins` removal — those toggles previously lived only in the retired dashboard.
 
 > **Dashboard available to everyone (v1.0.81+)**: The plugins dashboard (`/plugin`, `/mcp`, and `/skills`) is now on for all users by default. If you need to opt out, set `PLUGINS_DASHBOARD=false`, which also restores the legacy `copilot plugins` command. This opt-out was later removed in the same release, along with the legacy skills picker it kept alive — `/skills`, bare `/mcp`, and `/mcp show` (with no server name) always open the dashboard now, and `/mcp config` opens the dedicated MCP wizard.
+
+> **Non-interactive command restructuring (v1.0.84+)**: The scripted `copilot plugins` surface has been split into kind-specific commands. `copilot instruction list` and `copilot lsp list` replace `copilot plugins list --kind instruction` and `--kind lsp`. `copilot plugin enable`/`copilot plugin disable`, `copilot mcp enable`/`disable`, and `copilot skill enable`/`disable` replace the old cross-kind `copilot plugins enable/disable --plugin|--mcp|--skill` flags. `copilot skill add [--project]` replaces `copilot plugins install --skill [--scope project]` — the `--scope` spelling is gone. `copilot plugin list --json` now emits a flat array of plugins (not the previous `{ plugins, errors }` object), and `copilot plugins list` is now an alias of `copilot plugin list`, reporting only plugins rather than MCP servers, skills, instructions, or LSP servers. Update any scripts that parsed the old shapes.
 
 ### Loading Plugins from a Local Directory
 
