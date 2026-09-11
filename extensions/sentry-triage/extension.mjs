@@ -2,7 +2,7 @@ import { joinSession, createCanvas } from '@github/copilot-sdk/extension'
 import { execSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { startServer } from './server.mjs'
-import { scanIssues, listOrgs, listProjects, findProject } from './sentry.mjs'
+import { scanIssues, listOrgs, listProjects, findProject, getSeerAnalysis } from './sentry.mjs'
 import { checkConnections, checkConnectionsOnce, installDependencies, authenticate } from './preflight.mjs'
 import { sanitizeForPrompt } from './escape.mjs'
 
@@ -144,6 +144,11 @@ const TURN_TIMEOUT_MS = 240000
 // terminates the turn, `real` (and thus the lock) still releases here rather than
 // wedging the canvas forever. In normal operation the abort settles `real` first.
 const TURN_HARD_TIMEOUT_MS = 300000
+// Best-effort budget for pulling Sentry Seer's root-cause/plan before a
+// "Fix with Copilot" hand-off. Seer is optional polish that seeds the fix
+// session with a warm hypothesis, so it must never dominate the hand-off: if it
+// doesn't answer within this window we proceed without it (graceful fallback).
+const SEER_TIMEOUT_MS = 45000
 let sessionTurnChain = Promise.resolve()
 // startTurn: () => session.sendAndWait(..., TURN_HARD_TIMEOUT_MS).
 // callerTimeoutMs (optional): once the turn STARTS executing (not while queued),
@@ -558,7 +563,7 @@ function findIssueByKey(categories, key) {
   return null
 }
 
-function buildWorkPrompt({ key, issue, org, prTargets, model: modelOverride, assignCopilot = true, selectedTracker, selectedTrackerLabel, issueRepo, defaults, workToken = '' }) {
+function buildWorkPrompt({ key, issue, org, prTargets, model: modelOverride, assignCopilot = true, selectedTracker, selectedTrackerLabel, issueRepo, defaults, workToken = '', seer = null }) {
   // `key` is a Sentry-sourced shortId and every use below is interpolated into a
   // write-capable agent prompt, so neutralize it once here (matching the
   // defense-in-depth applied to summary/reason/url further down).
@@ -589,6 +594,19 @@ function buildWorkPrompt({ key, issue, org, prTargets, model: modelOverride, ass
   const summarySafe = sanitizeForPrompt(issue.summary || '', 300)
   const reasonSafe = sanitizeForPrompt(issue.reason || '', 200)
   const urlSafe = safeSentryUrl(issue.url)
+
+  // Sentry Seer's own AI root-cause / fix-plan, when available. It is generated
+  // from untrusted Sentry data, so it is sanitized and emitted ONLY inside the
+  // SENTRY-DATA (untrusted) block below — advisory material for the fix session,
+  // never instructions. Empty strings when Seer is unavailable (no plan on the
+  // org, timeout), which collapses these lines out of the prompt entirely.
+  const seerRootCause = seer && seer.rootCause ? sanitizeForPrompt(seer.rootCause, 1200) : ''
+  const seerPlan = seer && seer.plan ? sanitizeForPrompt(seer.plan, 1200) : ''
+  const seerDataLines = [
+    seerRootCause ? `Sentry Seer root-cause analysis (AI, advisory): ${seerRootCause}` : '',
+    seerPlan ? `Sentry Seer suggested fix plan (AI, advisory): ${seerPlan}` : '',
+  ].filter(Boolean).join('\n')
+  const seerDataBlock = seerDataLines ? `\n${seerDataLines}` : ''
 
   // Per-tracker "open the issue" guidance. GitHub is the default path (with the
   // marker label + repo). Linear/Jira are filed via their own connected MCP
@@ -650,7 +668,7 @@ Sentry title: ${summarySafe}
 Triaged reason: ${reasonSafe}
 Events: ${issue.events ?? 0}
 Users: ${issue.users ?? 0}
-Sentry URL: ${urlSafe}
+Sentry URL: ${urlSafe}${seerDataBlock}
 -----END SENTRY DATA-----
 
 Issue title: ${issueTitle}
@@ -733,7 +751,7 @@ Sentry title: ${summarySafe}
 Triaged reason: ${reasonSafe}
 Events: ${issue.events ?? 0}
 Users: ${issue.users ?? 0}
-Sentry URL: ${urlSafe}
+Sentry URL: ${urlSafe}${seerDataBlock}
 -----END SENTRY DATA-----
 
 Issue title: ${issueTitle}
@@ -751,7 +769,9 @@ ${plain}
 - Link: ${urlSafe}
 
 ## Expected fix direction
-- Reproduce and identify the root cause.
+${seerRootCause || seerPlan
+  ? '- Sentry Seer already proposed a root cause / fix plan (see the advisory lines in the SENTRY-DATA block). Use it as a STARTING hypothesis only — confirm it against the actual code and Sentry event before trusting it; if reproduction contradicts it, follow the evidence instead.'
+  : '- Reproduce and identify the root cause.'}
 - Implement a targeted fix.
 - Add or update test coverage.
 
@@ -1611,6 +1631,12 @@ async function onWorkSelected(entry, issueKeys, modelByKey, assignCopilot) {
     workRegistry.set(workToken, { entry, key, scopeGen, authorizedRepo: prExpectedRepo, authorizedHost: allowedHost })
 
     entry.notifyWork(key, { phase: 'working', error: '', copilotFix: wantsCopilot })
+    // Best-effort: seed the "Fix with Copilot" hand-off with Sentry Seer's own
+    // root-cause analysis / fix plan so the spawned session starts warm instead
+    // of cold. Only for the Copilot-fix path — a tracking-only issue doesn't need
+    // it. getSeerAnalysis never throws and self-bounds to SEER_TIMEOUT_MS, so an
+    // org without Seer (or a slow one) simply hands off exactly as before.
+    const seer = wantsCopilot ? await getSeerAnalysis(key, { timeoutMs: SEER_TIMEOUT_MS }) : null
     try {
       const response = await runSessionTurn(() => {
         // This closure runs only when the shared-session chain drains to it,
@@ -1638,6 +1664,7 @@ async function onWorkSelected(entry, issueKeys, modelByKey, assignCopilot) {
             issueRepo,
             defaults: runtimeDefaults,
             workToken,
+            seer,
           }),
           displayPrompt: wantsCopilot ? `Working Sentry issue ${key}…` : `Filing tracking issue for ${key}…`,
         }, TURN_HARD_TIMEOUT_MS)
