@@ -17,6 +17,8 @@ import {
   projectView,
   issueList,
   projectListPage,
+  issueExplain,
+  issuePlan,
   SentryError,
 } from './sentryClient.mjs'
 
@@ -493,4 +495,88 @@ export async function scanIssues(org, project, period = '24h') {
     olderCapped,
     warnings,
   }
+}
+
+// --- Sentry Seer (AI root-cause + fix plan) ----------------------------------
+//
+// Seer is Sentry's OWN AI: `issue.explain` returns a root-cause analysis and
+// `issue.plan` a suggested fix plan for a given issue. The triage canvas uses
+// these ONLY to seed the "Fix with Copilot" hand-off with a warm starting
+// hypothesis — the spawned session still reproduces and verifies. Everything Seer
+// returns is model-generated from untrusted Sentry data, so callers must treat it
+// as untrusted prompt input (sanitize + label), never as instructions.
+
+// Cap the advisory text we forward. Seer output can be long; the hand-off prompt
+// only needs a compact hypothesis, and a bounded length also blunts any injection
+// payload buried in the analysis.
+const SEER_TEXT_CAP = 1200
+
+// Normalize a Seer payload (shape is SDK-version dependent, typed `unknown`) into
+// a single plain string. Prefers human-readable fields; falls back to walking
+// step/block arrays; last resort is a compact JSON dump. Always bounded.
+function seerText(raw, cap = SEER_TEXT_CAP) {
+  const flatten = (val, depth = 0) => {
+    if (val == null || depth > 4) return ''
+    if (typeof val === 'string') return val
+    if (typeof val === 'number' || typeof val === 'boolean') return String(val)
+    if (Array.isArray(val)) return val.map((v) => flatten(v, depth + 1)).filter(Boolean).join('\n')
+    if (typeof val === 'object') {
+      // Prefer the fields Seer is most likely to expose as prose.
+      for (const k of ['rootCause', 'root_cause', 'explanation', 'analysis', 'summary', 'markdown', 'text', 'content', 'message', 'plan', 'solution', 'description']) {
+        if (typeof val[k] === 'string' && val[k].trim()) return val[k]
+      }
+      // Structured step/block lists: join their text.
+      for (const k of ['steps', 'blocks', 'items', 'sections', 'causes']) {
+        if (Array.isArray(val[k])) {
+          const joined = flatten(val[k], depth + 1)
+          if (joined.trim()) return joined
+        }
+      }
+      try {
+        const json = JSON.stringify(val)
+        if (json && json !== '{}') return json
+      } catch { /* circular / non-serializable — give up on this branch */ }
+    }
+    return ''
+  }
+  const text = flatten(raw).trim()
+  if (!text) return ''
+  return text.length > cap ? text.slice(0, cap - 1).trimEnd() + '…' : text
+}
+
+// Resolve a promise but give up after `ms`, resolving to `fallback` instead of
+// hanging the hand-off. The underlying SDK call keeps running on the serial chain
+// (we can't cancel it — sentry@0.42.x has no per-call AbortSignal), but the
+// caller is freed to proceed without Seer.
+function seerWithTimeout(promise, ms, fallback = null) {
+  return new Promise((resolve) => {
+    let done = false
+    const timer = setTimeout(() => { if (!done) { done = true; resolve(fallback) } }, ms)
+    timer.unref?.()
+    Promise.resolve(promise).then(
+      (v) => { if (!done) { done = true; clearTimeout(timer); resolve(v) } },
+      () => { if (!done) { done = true; clearTimeout(timer); resolve(fallback) } },
+    )
+  })
+}
+
+// Best-effort Seer enrichment for one issue. Returns { rootCause, plan } with
+// either field '' when unavailable, or null when Seer produced nothing usable at
+// all (no plan on the org, unknown issue, timeout). NEVER throws: a Seer failure
+// must degrade to the non-Seer hand-off, not break "Fix with Copilot".
+//
+// `key` is the Sentry shortId. `timeoutMs` bounds the WHOLE enrichment so a slow
+// or unavailable Seer can't stall the hand-off; explain and plan share the budget
+// and run concurrently on the serial SDK chain.
+export async function getSeerAnalysis(key, { timeoutMs = 45000, includePlan = true } = {}) {
+  const ref = String(key || '').trim()
+  if (!ref) return null
+  const [explainRaw, planRaw] = await Promise.all([
+    seerWithTimeout(issueExplain(ref), timeoutMs, null),
+    includePlan ? seerWithTimeout(issuePlan(ref), timeoutMs, null) : Promise.resolve(null),
+  ])
+  const rootCause = seerText(explainRaw)
+  const plan = seerText(planRaw)
+  if (!rootCause && !plan) return null
+  return { rootCause, plan }
 }

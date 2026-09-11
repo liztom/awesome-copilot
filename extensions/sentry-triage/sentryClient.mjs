@@ -350,3 +350,23 @@ export async function issueList({ orgProject, query, sort = 'date', limit = 100,
     )
   )
 }
+
+// Ask Sentry's own Seer AI to analyze an issue's root cause (`issue.explain`) or
+// draft a solution plan (`issue.plan`). `issueRef` is the Sentry shortId (e.g.
+// "BACKEND-1AB"), which the SDK accepts as a suffix reference. Returns the raw
+// SDK payload (shape is version-dependent, so callers normalize defensively).
+//
+// These are BEST-EFFORT enrichers, not load-bearing: Seer requires a Seer-enabled
+// Sentry plan, so on an org without it the SDK throws. Callers must treat any
+// throw (no plan, unknown issue, timeout) as "no Seer available" and fall back to
+// the non-Seer flow. Runs on the SAME shared serial chain as every other SDK call
+// — Seer keeps state in the same module-global SDK, so a second instance would
+// race the paged list / scan rather than isolate it. Default (no `force`) reuses
+// an analysis Sentry already computed instead of paying to regenerate it.
+export async function issueExplain(issueRef) {
+  return runSerial(async () => (await getSdk()).issue.explain({ issue: String(issueRef || '') }))
+}
+
+export async function issuePlan(issueRef) {
+  return runSerial(async () => (await getSdk()).issue.plan({ issue: String(issueRef || '') }))
+}
