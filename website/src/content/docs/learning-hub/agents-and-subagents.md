@@ -3,7 +3,7 @@ title: 'Agents and Subagents'
 description: 'Learn how delegated subagents differ from primary agents, when to use them, and how to launch them in VS Code and Copilot CLI.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-13
 estimatedReadingTime: '9 minutes'
 tags:
   - agents
@@ -199,6 +199,17 @@ If you share agent files across surfaces, document those differences so users kn
 When an agent delegates work to multiple chats, VS Code's **Agents window** now shows those chats as children of their parent session in the sessions list, so you can see which chats belong together instead of managing a flat list of unrelated sessions. Each chat row shows its own title, status, and pending approvals. A delegated request also includes a source link (for example **Sent by another session**) so you can jump straight back to whichever session or chat initiated it.
 
 This pairs with **improved workspace resolution**: agents can resolve a workspace by project name (for example, "run this in the vscode workspace") in addition to absolute paths, which simplifies prompts that hand off work across multiple repositories.
+
+### Agent-queued messages (v1.137+)
+
+An agent can keep other chats moving without interrupting them: when it uses the `send_message` session-management tool to contact a chat that is already processing a request, VS Code queues the message and starts it as soon as the active turn completes successfully. Messages queued for the same session (or a different one) run in the order they were sent, which makes multi-chat delegation patterns predictable even when several agents are messaging each other at once.
+
+### Automations and Voice Mode in the Agents window (v1.137+, Preview/Experimental)
+
+VS Code's Agents window gained two capabilities that complement subagent delegation:
+
+- **Automations (Preview)**: Schedule a recurring agent task — hourly, daily, or weekly — from a starter template (catching up on changes, triaging issues, finding bugs) or your own prompt. Enable `setting(chat.automations.enabled)`, then open **Automations** in the Agents window sidebar to create or run one on demand. This is the VS Code counterpart to [Automations in the GitHub Copilot app](../using-automations-in-copilot-app/) — same idea, run from your editor instead of the desktop app.
+- **Voice Mode (Experimental)**: Talk with an agent and interrupt or redirect it while it works, using `setting(agents.voice.enabled)`. Voice Mode has agent-session awareness, so you can find recent sessions, switch between them, and ask for a session's status by voice. It requires an eligible individual Copilot plan and isn't available on Business or Enterprise plans; organizations can disable it via policy.
 
 ## Common questions
 

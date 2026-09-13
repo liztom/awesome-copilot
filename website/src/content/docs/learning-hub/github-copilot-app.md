@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-13
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -82,6 +82,8 @@ Closing the app's main window keeps it running in the background instead of quit
 
 For a hands-on guide to building canvases with `/create-canvas`, see [Working with Canvas Extensions](../working-with-canvas-extensions/).
 
+> **Generated artifacts in the Files tab (v1.1.20+)**: Markdown files an agent generates (for example a summary or report) now open in the session's **Files** tab alongside your repository files, with a switcher to move between generated artifacts and added files. You can promote a generated artifact into the repository directly from there instead of copying its content by hand.
+
 ### Customize
 
 **Customize** *(v1.1.13+)* is a single place in the Copilot app to browse and manage everything that extends your agents: plugins, skills, MCP servers, and canvases. Instead of hunting through separate settings pages, open **Customize** to:
@@ -91,6 +93,8 @@ For a hands-on guide to building canvases with `/create-canvas`, see [Working wi
 - Create, edit, or remove your own **personal skills** directly in the app, without hand-authoring a `SKILL.md` file
 
 This makes Customize a good starting point if you want to extend the app's capabilities but don't need the full `copilot plugin` CLI workflow described in [Installing and Using Plugins](../installing-and-using-plugins/).
+
+> **Disambiguating shared agent names (v1.1.20+)**: If two installed plugins each ship a custom agent with the same display name, the agent picker and the `/agent` autocomplete in the prompt composer now label each entry with its owning plugin so you can tell them apart before starting a session.
 
 ### Agent Merge
 
