@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-14
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -55,6 +55,10 @@ Instead of checking GitHub, your CLI, and VS Code for updates, everything is in 
 The Copilot app includes built-in automations that can run scheduled tasks for you using the same agentic technology. You can use templates out of the box or create your own.
 
 Automations run in the context of a repository, so they can access issues, pull requests, and code. You can also choose whether they run as a plan, an interactive session, or on autopilot.
+
+### Setting a Persistent Goal
+
+**`/goal`** *(v1.1.15+)* sets a persistent objective for autopilot to work toward in a local session, instead of only handling one prompt at a time. The composer shows a **Goal pill** with live status—Active, Paused, or Done—that expands to show the objective, a completion summary, pause reason, turn count, and AI Credits usage as the agent works. As of v1.1.16+, `/autopilot` also sets this persistent objective, matching `/goal`'s behavior instead of only switching the session mode.
 
 ### Isolated Worktrees for Parallel Work
 
@@ -108,6 +112,14 @@ Agent Merge also understands **stacked pull requests**: it shows a stack summary
 ### Requesting Code Reviews
 
 From the app, you can request a Copilot code review on a pull request—and re-request a review even from reviewers who already responded—without leaving the session. This keeps the review loop inside the same workspace where the change was made.
+
+### Editing Issues and Pull Requests Directly
+
+**Inline editing** *(v1.1.18+)* lets you edit issue and pull request titles and descriptions, and edit, delete, or hide comments—all without leaving the app. Edited comments show an edited indicator so collaborators can see history was changed.
+
+### Installing MCP Servers via Deep Link
+
+**MCP install links** *(v1.1.15+)* let you install an MCP server by opening a deep link, which shows a prefilled review form for you to confirm the server's command, arguments, and environment before it's added—useful for sharing a one-click setup link with teammates instead of walking them through manual configuration.
 
 ## Who is the Copilot app for?
 
