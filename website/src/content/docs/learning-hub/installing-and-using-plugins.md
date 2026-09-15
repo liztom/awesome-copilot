@@ -3,7 +3,7 @@ title: 'Installing and Using Plugins'
 description: 'Learn how to find, install, and manage plugins that extend GitHub Copilot CLI with reusable agents, skills, hooks, and integrations.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-01
+lastUpdated: 2026-09-15
 relatedArticles:
   - ./building-custom-agents.md
   - ./creating-effective-skills.md
@@ -236,6 +236,10 @@ copilot plugin uninstall my-plugin
 ```
 
 > **Auto-update for first-party plugins** *(v1.0.78+)*: Plugins sourced from the official `copilot-plugins` marketplace automatically update to their latest version at the start of each session. You do not need to run `copilot plugin update` for first-party plugins — updates are applied silently on startup. Community plugins from `awesome-copilot` and other marketplace registries still require a manual `copilot plugin update` command.
+
+**New kind-specific list and enable/disable commands** *(v1.0.84+)*: `copilot plugins list --kind instruction` and `--kind lsp` are replaced by dedicated `copilot instruction list` and `copilot lsp list` commands. `copilot plugin`, `copilot mcp`, and `copilot skill` now each support their own `enable` and `disable` subcommands, replacing the older cross-kind `copilot plugins enable/disable --plugin|--mcp|--skill` syntax. `--json` output is also now available on `copilot plugin list`, `copilot plugin marketplace list`, and `copilot plugin marketplace browse`.
+
+> **Breaking change (v1.0.84+)**: `copilot plugins install --skill [--scope project]` is replaced by `copilot skill add [--project]`; the `--scope` spelling is gone. The cross-kind `--kind`, `--scope`, `--mcp`, and `--skill` flags have been removed from `copilot plugins` — use the dedicated `copilot mcp` and `copilot skill` commands instead. `copilot plugins list --json` now emits a flat array of plugins instead of the old `{ plugins, errors }` object, and `copilot plugins list` is now a plain alias of `copilot plugin list`, reporting only plugins rather than MCP servers, skills, instructions, or LSP servers. Update any scripts that parsed the previous output shapes.
 
 ### Enabling and Disabling Plugin Components
 

@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-15
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -81,6 +81,8 @@ Closing the app's main window keeps it running in the background instead of quit
 - This makes it easy to see exactly what an agent is doing and step in when needed
 
 For a hands-on guide to building canvases with `/create-canvas`, see [Working with Canvas Extensions](../working-with-canvas-extensions/).
+
+**Generated artifacts in the Files tab** *(v1.1.21+)*: Files an agent generates during a session, such as Markdown documents, now open in the Files tab alongside your repository's own files, with a switcher to move between the two sources. If a generated artifact turns out to be useful long-term, you can promote it directly into the repository from the same tab instead of copying its contents manually.
 
 ### Customize
 
