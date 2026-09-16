@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-16
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -91,6 +91,20 @@ For a hands-on guide to building canvases with `/create-canvas`, see [Working wi
 - Create, edit, or remove your own **personal skills** directly in the app, without hand-authoring a `SKILL.md` file
 
 This makes Customize a good starting point if you want to extend the app's capabilities but don't need the full `copilot plugin` CLI workflow described in [Installing and Using Plugins](../installing-and-using-plugins/).
+
+You can also install MCP servers directly via a deep link *(v1.1.15+)*, which opens a prefilled review form in Customize for confirmation before the server is added — useful for sharing a one-click MCP setup link with teammates instead of walking them through manual configuration.
+
+### Setting a Persistent Goal
+
+The `/goal` command *(v1.1.15+)* sets a persistent objective for autopilot to work towards in local sessions. Once a goal is set, the composer shows a **Goal pill** with live status — Active, Paused, or Done — that expands to show the objective, a completion summary, pause reason, turn count, and AI Credits usage *(v1.1.17+)*. This gives you an at-a-glance way to track long-running autopilot work without re-reading the full conversation. As of v1.1.18, `/autopilot` also sets this same persistent objective, matching `/goal`, instead of only switching the session mode.
+
+### Editing Issues and Pull Requests In-App
+
+*(v1.1.18+)* You can edit issue and pull request titles and descriptions, and edit, delete, or hide comments, directly from the app without switching to GitHub.com. Pull request fix buttons also gained a **"Fix with instructions"** option, letting you add guidance before the agent runs a fix.
+
+### Generated Artifacts
+
+*(v1.1.20+)* Generated artifacts, such as Markdown files an agent produces, now open in the **Files tab** alongside your repository files, with a switcher to move between them and an option to promote an artifact into the repository proper.
 
 ### Agent Merge
 

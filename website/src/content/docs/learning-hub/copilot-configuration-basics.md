@@ -3,7 +3,7 @@ title: 'Copilot Configuration Basics'
 description: 'Learn how to configure GitHub Copilot at user, workspace, and repository levels to optimize your AI-assisted development experience.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-07
+lastUpdated: 2026-09-16
 estimatedReadingTime: '10 minutes'
 tags:
   - configuration
@@ -457,7 +457,7 @@ The model picker opens in a **full-screen view** with inline reasoning effort ad
 
 **Auto mode and server-side model routing** (v1.0.43+): When you select **Auto** as your model, the CLI uses server-side model routing for real-time model selection. Instead of locking in a single model at session start, Auto mode evaluates each request and routes it to the most appropriate model dynamically. This means straightforward questions can be handled by a faster model while complex reasoning tasks are automatically escalated — without you needing to switch models manually.
 
-**Model family aliases** (v1.0.64+): Instead of typing a full model name, you can use short family aliases in the model setting: `opus`, `sonnet`, `haiku` (Anthropic), and `gpt`, `gemini` (Google/OpenAI). The CLI resolves the alias to the latest available model in that family. This is especially useful in scripts or configuration files where you want to track the best model in a family without hardcoding a version string. Recent models available include **Claude Opus 5** (v1.0.75+), the latest in Anthropic's Opus family for the most demanding tasks, **Grok 4.5** (v1.0.76+) from xAI, **Gemini 3.7 Flash** (v1.0.81+), and **Claude Fable 5.1** (v1.0.83+). **Grok 4.6** (v1.0.81+) also gains support for the `xhigh` reasoning effort level, one step above `high`, for the most demanding reasoning tasks. The `/model picker` also periodically retires older models no longer worth recommending — a recent cleanup removed several deprecated Claude and Gemini entries (v1.0.83+), so don't be surprised if a model you previously pinned disappears from the list.
+**Model family aliases** (v1.0.64+): Instead of typing a full model name, you can use short family aliases in the model setting: `opus`, `sonnet`, `haiku` (Anthropic), and `gpt`, `gemini` (Google/OpenAI). The CLI resolves the alias to the latest available model in that family. This is especially useful in scripts or configuration files where you want to track the best model in a family without hardcoding a version string. Recent models available include **Claude Opus 5** (v1.0.75+), the latest in Anthropic's Opus family for the most demanding tasks, **Grok 4.5** (v1.0.76+) from xAI, **Gemini 3.7 Flash** (v1.0.81+), **Claude Fable 5.1** (v1.0.83+), and **GPT-6 Astra** (v1.0.85+). **Grok 4.6** (v1.0.81+) also gains support for the `xhigh` reasoning effort level, one step above `high`, for the most demanding reasoning tasks. The `/model picker` also periodically retires older models no longer worth recommending — a recent cleanup removed several deprecated Claude and Gemini entries (v1.0.83+), so don't be surprised if a model you previously pinned disappears from the list.
 
 **Model fallback lists** *(v1.0.83+)*: Custom agents can set `model` to a list of several models instead of a single name. Copilot tries each one in order until it finds one available to your account — useful when your preferred model is temporarily rate-limited or not enrolled. Pair this with `model-policy: required` to keep the agent restricted to that list even if you try to switch models mid-session. See [Building Custom Agents](../building-custom-agents/) for the frontmatter syntax.
 
@@ -792,6 +792,31 @@ gh copilot --effort high "Refactor the authentication module"
 ```
 
 Accepted values are `low`, `medium`, and `high`. You can also set a default via the `effortLevel` config setting.
+
+**Vim mode** *(v1.0.85+)*: Modal editing is now available to everyone in the CLI composer. Turn it on with the in-session `/vim` command, or persist the preference with the `editorMode` setting set to `vim`:
+
+```
+/vim
+```
+
+With vim mode active, the composer shows the current mode (normal or insert) as you type, so you always know which mode you're in before typing a command.
+
+**`/config` sidebar** *(v1.0.85+)*: The `/config` command opens a sidebar configuration screen directly in the CLI, giving you a persistent view of settings alongside your conversation instead of a full-screen dialog:
+
+```
+/config
+```
+
+**Plugin, MCP, and skill list commands** *(v1.0.85+)*: `copilot instruction list` and `copilot lsp list` replace `copilot plugins list --kind instruction` and `copilot plugins list --kind lsp`, matching the same per-kind pattern already used by `copilot mcp list` and `copilot skill list`. All of `copilot plugin list`, `copilot plugin marketplace list`, and `copilot plugin marketplace browse` also gained a `--json` flag for scripting. Additionally, `enable` and `disable` subcommands were added directly to `copilot plugin`, `copilot mcp`, and `copilot skill`, replacing the older cross-kind `copilot plugins enable/disable --plugin|--mcp|--skill` syntax:
+
+```bash
+copilot instruction list        # list loaded instruction files
+copilot lsp list                # list configured LSP servers
+copilot mcp enable my-server    # enable an MCP server
+copilot skill disable my-skill  # disable a skill
+```
+
+**`/sandbox` network allow/deny rules** *(v1.0.85+)*: You can now configure host-level allow and deny rules for the sandbox's network access directly from `/sandbox`, without needing to replace your configured upstream proxy. This gives finer-grained control over which external hosts sandboxed commands can reach.
 
 ### CLI Startup Flags
 

@@ -3,7 +3,7 @@ title: 'Installing and Using Plugins'
 description: 'Learn how to find, install, and manage plugins that extend GitHub Copilot CLI with reusable agents, skills, hooks, and integrations.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-01
+lastUpdated: 2026-09-16
 relatedArticles:
   - ./building-custom-agents.md
   - ./creating-effective-skills.md
@@ -236,6 +236,17 @@ copilot plugin uninstall my-plugin
 ```
 
 > **Auto-update for first-party plugins** *(v1.0.78+)*: Plugins sourced from the official `copilot-plugins` marketplace automatically update to their latest version at the start of each session. You do not need to run `copilot plugin update` for first-party plugins — updates are applied silently on startup. Community plugins from `awesome-copilot` and other marketplace registries still require a manual `copilot plugin update` command.
+
+**CLI enable/disable subcommands** *(v1.0.85+)*: `copilot plugin`, `copilot mcp`, and `copilot skill` each gained dedicated `enable` and `disable` subcommands, replacing the older cross-kind `copilot plugins enable/disable --plugin|--mcp|--skill` syntax:
+
+```bash
+copilot plugin enable my-plugin
+copilot plugin disable my-plugin
+copilot mcp enable my-server
+copilot skill disable my-skill
+```
+
+`copilot instruction list` and `copilot lsp list` similarly replace `copilot plugins list --kind instruction` and `copilot plugins list --kind lsp`. And `copilot plugin list`, `copilot plugin marketplace list`, and `copilot plugin marketplace browse` now all support a `--json` flag for scripting.
 
 ### Enabling and Disabling Plugin Components
 
