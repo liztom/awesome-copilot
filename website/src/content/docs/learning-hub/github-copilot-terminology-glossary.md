@@ -287,6 +287,8 @@ A VS Code component (v1.136+) that lets multiple VS Code windows connect to the 
 
 **When to use**: When you want a consistent agent session shared across multiple editor windows, or when you want the same underlying agent behavior across VS Code, the CLI, and the Copilot app.
 
+**Recent expansions (v1.138+)**: Agent sessions can now run inside a project's local **Dev Container** (`chat.agentHost.devContainer.enabled`), so an agent uses the same tools and dependencies configured for the project instead of the local machine. Codex support in the agent host was also expanded — you can choose between a GitHub Copilot or ChatGPT subscription for Codex sessions, continue the same Codex session between the ChatGPT app and VS Code, and use the full set of VS Code tools (built-in, extension, and MCP) from a Codex session. You can also create pull requests directly from an Agent Host session (`chat.agentMerge.enabled`, experimental), reviewing and editing the generated title and description before submitting.
+
 **Related terms**: [Agent](#agent), [Coding Agent](#coding-agent)
 
 ---

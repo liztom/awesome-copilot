@@ -255,6 +255,8 @@ This opens an interactive list where each installed plugin and its components ar
 
 > **Dashboard available to everyone (v1.0.81+)**: The plugins dashboard (`/plugin`, `/mcp`, and `/skills`) is now on for all users by default. If you need to opt out, set `PLUGINS_DASHBOARD=false`, which also restores the legacy `copilot plugins` command. This opt-out was later removed in the same release, along with the legacy skills picker it kept alive — `/skills`, bare `/mcp`, and `/mcp show` (with no server name) always open the dashboard now, and `/mcp config` opens the dedicated MCP wizard.
 
+> **Unified enable/disable commands (v1.0.85+)**: `copilot plugin`, `copilot mcp`, and `copilot skill` now each accept `enable` and `disable` subcommands directly (e.g., `copilot plugin disable my-plugin`, `copilot mcp enable postgres`), replacing the older cross-kind `copilot plugins enable/disable --plugin|--mcp|--skill` syntax. The cross-kind `--kind`, `--scope`, `--mcp`, and `--skill` flags have been removed from `copilot plugins` entirely — use the dedicated `copilot mcp` and `copilot skill` commands instead. `copilot instruction list` and `copilot lsp list` replace `copilot plugins list --kind instruction` and `--kind lsp`, and `copilot plugins list --json` now emits a flat array of plugins rather than the old `{ plugins, errors }` object.
+
 ### Loading Plugins from a Local Directory
 
 You can load plugins directly from a local directory without installing them from a marketplace, using the `--plugin-dir` flag when starting Copilot:
