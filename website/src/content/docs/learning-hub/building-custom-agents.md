@@ -3,7 +3,7 @@ title: 'Building Custom Agents'
 description: 'Learn how to create specialized GitHub Copilot agents with custom personas, tool integrations, and domain expertise.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-05
+lastUpdated: 2026-09-18
 estimatedReadingTime: '10 minutes'
 tags:
   - agents
@@ -83,6 +83,17 @@ tools: ['codebase', 'terminal', 'github']
 > tools: ['codebase', 'terminal', 'github']
 > ---
 > ```
+
+**include-custom-instructions** *(v1.0.86+)*: Set to `true` to have this custom agent automatically read your repository's instruction files (`AGENTS.md`, `copilot-instructions.md`, `CLAUDE.md`) at session start. By default, custom agents do **not** inherit these repository-wide instructions — this opt-in is useful when an agent should still respect team coding standards on top of its own specialized persona:
+
+```yaml
+---
+name: 'Security Reviewer'
+model: Claude Sonnet 4
+tools: ['codebase', 'terminal', 'github']
+include-custom-instructions: true
+---
+```
 
 **reasoningEffort** *(v1.0.66+)*: Override the reasoning effort level for this agent. Accepted values are `low`, `medium`, and `high`. This lets you pin specific agents to a cost/quality tradeoff regardless of the user's global setting — for example, a quick code-formatting agent can use `low` effort, while a security reviewer uses `high`:
 
