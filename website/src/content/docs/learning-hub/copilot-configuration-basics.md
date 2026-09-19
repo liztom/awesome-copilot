@@ -3,7 +3,7 @@ title: 'Copilot Configuration Basics'
 description: 'Learn how to configure GitHub Copilot at user, workspace, and repository levels to optimize your AI-assisted development experience.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-07
+lastUpdated: 2026-09-19
 estimatedReadingTime: '10 minutes'
 tags:
   - configuration
@@ -540,6 +540,10 @@ With the sidebar open, you can see all running and backgrounded sessions in a sp
 **Sidebar sort order** *(v1.0.83+)*: The split Sessions sidebar supports **Recent**, **Created**, **Name**, and classic **None** sorting so you can order the list the way that fits your workflow. Your chosen order is remembered across CLI restarts.
 
 **Windows 11 taskbar status** *(v1.0.83+)*: On Windows 11, running Copilot CLI sessions now appear in the taskbar with live hover status cards, so you can check on a background session's progress without switching back to its terminal window.
+
+**Vim mode** *(v1.0.85+)*: Modal editing is available to everyone in the composer. Turn it on with `/vim`, or set `editorMode` to `vim` in your configuration to enable it by default. The current mode (insert/normal) is shown while you type.
+
+**`/config` sidebar** *(v1.0.85+)*: Run `/config` to open a sidebar configuration screen inside the CLI, giving you a faster way to browse and edit settings without leaving your session.
 
 The `/rewind` command opens a timeline picker that lets you roll back the conversation to any earlier point in history. You can also trigger it by pressing **double-Esc**:
 
