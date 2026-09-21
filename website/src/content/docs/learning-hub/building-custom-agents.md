@@ -96,6 +96,18 @@ tools: ['codebase', 'terminal', 'github']
 ---
 ```
 
+**include-custom-instructions** *(v1.0.86+)*: By default, a custom agent's behavior comes entirely from its own frontmatter and instructions. Set `include-custom-instructions: true` to have the agent also read repository instruction files (`AGENTS.md`, `copilot-instructions.md`, `CLAUDE.md`) — useful when you want an agent to follow project-wide conventions in addition to its own persona:
+
+```yaml
+---
+name: 'API Design Reviewer'
+description: 'Reviews API designs for consistency, RESTful patterns, and team conventions'
+model: Claude Sonnet 4
+include-custom-instructions: true
+tools: ['codebase', 'github']
+---
+```
+
 **tools** (recommended): An array of built-in tools and MCP servers the agent can access. Common tools include:
 
 | Tool | Purpose |

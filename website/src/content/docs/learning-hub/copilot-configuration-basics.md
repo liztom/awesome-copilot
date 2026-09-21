@@ -461,6 +461,10 @@ The model picker opens in a **full-screen view** with inline reasoning effort ad
 
 **Model fallback lists** *(v1.0.83+)*: Custom agents can set `model` to a list of several models instead of a single name. Copilot tries each one in order until it finds one available to your account — useful when your preferred model is temporarily rate-limited or not enrolled. Pair this with `model-policy: required` to keep the agent restricted to that list even if you try to switch models mid-session. See [Building Custom Agents](../building-custom-agents/) for the frontmatter syntax.
 
+**GPT-6 Astra** *(v1.0.85+)*: A new model became available in the `/model` picker. As with other models, resolve it via the `gpt` family alias in scripts or configuration to always track the latest available GPT model without hardcoding a version string.
+
+**Auto routing tier controls** *(v1.0.87+)*: Organizations can now set user and managed startup defaults for the **Auto** routing tier, including a strict, non-overridable policy or a user-overridable one. This lets a team pin everyone to a specific Auto behavior (or a floor/ceiling on it) while still allowing individual choice where the policy permits it.
+
 **Plan mode model** *(v1.0.74+)*: When using plan mode (which blocks file mutations and keeps changes in a planning phase), you can assign a *separate* model specifically for planning — different from your regular session model. This lets you use a fast, cost-effective model for plan drafting while keeping a more capable model on standby for the implementation phase:
 
 ```
@@ -685,6 +689,14 @@ Use `/diagnose` when a session is behaving unexpectedly — it inspects session 
 
 **Voice dictation** *(v1.0.81+)*: Press **Ctrl+Space** to toggle voice dictation on or off, letting you speak a prompt instead of typing it.
 
+**Vim mode** *(v1.0.85+)*: Turn on modal (Vim-style) editing in the composer with `/vim`, or set `editorMode` to `vim` in `/settings`. The current mode (normal/insert) is shown while you type.
+
+**`/config` sidebar** *(v1.0.85+)*: Opens a sidebar configuration screen in the CLI for browsing and adjusting settings without leaving the conversation view — a lighter-weight companion to the full-screen `/settings` dialog.
+
+**Steering prompt recall** *(v1.0.87+)*: Consecutive steering prompts sent in the same mode now combine into a single pending message. Press **Up** in an empty chat input to recall that pending message for editing (including pasted text and attachments) — the recall hint appears in the pending message itself. **Ctrl+C** stops the running turn instead of removing queued prompts one at a time, while **Ctrl+Q** queued prompts remain separate, and **Ctrl+P** browses history without withdrawing prompts. This is available for local sessions only; commands and prompts already being processed cannot be recalled.
+
+**Worktree path templates** *(v1.0.87+)*: A `worktreePathTemplate` setting controls where `/worktree`, `/move`, `/new`, and `--worktree` create worktrees. Set it to something like `~/src/worktrees/{repo}/{branch}`; `{repoPath}`, `{repo}`, `{branch}`, and `{branchSlug}` placeholders are supported. Leaving it unset keeps the previous `<repo>.worktrees/` layout, with slashes in branch names flattened to dashes.
+
 **Worktree switch reliability (v1.0.82+)**: If you start typing a new message while `/worktree` or `/move` is preparing a worktree switch, that message is no longer dropped when the switch completes.
 
 The `/ask` command lets you ask a quick question without affecting your conversation history. The current session context is preserved, so you can use it for one-off lookups without derailing an ongoing task. Responses are rendered as full markdown, including tables and formatted links:
@@ -846,6 +858,10 @@ These flags apply only to the current invocation — your persisted sandbox pref
 **`worktreeBaseRef` setting** *(v1.0.79-8+)*: Controls whether `/worktree`, `/worktree new`, and the `--worktree` startup flag create the new worktree from `HEAD` or from the remote default branch. All three now default to `HEAD`; previously `--worktree` defaulted to starting from the remote default branch. Set this in `/settings` if you want worktrees to branch from the remote default instead.
 
 > **Breaking change — sandbox network isolation (v1.0.83+)**: On macOS and Linux, sandboxed commands can no longer reach services running on your own machine, including a server the sandboxed command itself starts on `127.0.0.1`. This means test suites that bind a local port will fail inside the sandbox. Turn on **Allow local network** in `/sandbox` to restore access to localhost. On Linux, sandboxing also now requires `slirp4netns`, `nsenter`, `iptables`, `ip6tables`, `iptables-restore`, and `ip6tables-restore` on `PATH` — install these if sandboxed commands start failing to launch. Additionally, Linux sandboxes now restrict network egress to the configured HTTP(S) proxy when one is set; this proxy mode requires `slirp4netns`, `util-linux` 2.35+, `iptables`, and `/dev/net/tun` access.
+
+**Sandbox network host rules** *(v1.0.85+)*: `/sandbox` now supports explicit **Network host allow/deny rules** without replacing your configured upstream proxy, giving finer-grained control over which hosts a sandboxed session can reach beyond the blanket local-network toggle.
+
+**`/sandbox disable`** *(v1.0.85+)*: When your organization's policy allows a session opt-out, `/sandbox disable` turns the sandbox off for the current session — the managed sandbox startup notice now names this command directly instead of implying sandboxing can't be turned off.
 
 The `--attachment` flag (available in prompt mode, `-p`) lets you attach files — images or native documents — to the initial prompt in non-interactive mode:
 

@@ -50,6 +50,8 @@ The central hub of the Copilot app is the **My Work** view. This dashboard shows
 
 Instead of checking GitHub, your CLI, and VS Code for updates, everything is in one place.
 
+*(v1.1.23+)* My Work's **Add filter** menu can generate a filter from a plain-language description of the results you want — inspect, edit, or revert the generated filter before applying it, instead of manually building filter conditions.
+
 ### Automations
 
 The Copilot app includes built-in automations that can run scheduled tasks for you using the same agentic technology. You can use templates out of the box or create your own.
@@ -91,6 +93,12 @@ For a hands-on guide to building canvases with `/create-canvas`, see [Working wi
 - Create, edit, or remove your own **personal skills** directly in the app, without hand-authoring a `SKILL.md` file
 
 This makes Customize a good starting point if you want to extend the app's capabilities but don't need the full `copilot plugin` CLI workflow described in [Installing and Using Plugins](../installing-and-using-plugins/).
+
+*(v1.1.23+)* A featured **Sentry canvas** is available in Customize for triaging live Sentry issues directly from the app.
+
+### Local Sandbox for Shell Commands
+
+*(v1.1.23+)* A project setting and `/sandbox` command let you run the agent's shell commands in a local sandbox restricted to the session's workspace, matching the CLI's sandboxing model. This restricts filesystem access so shell commands the agent runs cannot read or write outside the current session's worktree.
 
 ### Agent Merge
 
