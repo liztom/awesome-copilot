@@ -3,7 +3,7 @@ title: 'Building Custom Agents'
 description: 'Learn how to create specialized GitHub Copilot agents with custom personas, tool integrations, and domain expertise.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-05
+lastUpdated: 2026-09-22
 estimatedReadingTime: '10 minutes'
 tags:
   - agents
@@ -96,6 +96,8 @@ tools: ['codebase', 'terminal', 'github']
 ---
 ```
 
+> **Applies on agent selection (v1.0.87+)**: A custom agent's `reasoning-effort` now applies as soon as the agent is selected, instead of only taking effect together with its `model` setting. An explicit `--reasoning-effort` flag on the command line still wins, and if the currently selected model doesn't support a level the agent requests, the CLI reports it and leaves the setting unapplied rather than silently ignoring it.
+
 **tools** (recommended): An array of built-in tools and MCP servers the agent can access. Common tools include:
 
 | Tool | Purpose |
@@ -107,6 +109,18 @@ tools: ['codebase', 'terminal', 'github']
 | `edit` | Modify files in the workspace |
 
 For MCP server tools, reference them by server name (e.g., `postgres`, `docker`). See [Understanding MCP Servers](../understanding-mcp-servers/) for details.
+
+**include-custom-instructions** *(v1.0.86+)*: By default, custom agents run with only the instructions in their own frontmatter and body. Set `include-custom-instructions: true` to have the agent also load repository instruction files (`AGENTS.md`, `copilot-instructions.md`, `CLAUDE.md`) alongside its own persona. This is useful when you want an agent to follow team-wide conventions in addition to its specialized behavior:
+
+```yaml
+---
+name: 'Security Reviewer'
+description: 'Thorough security audit for OWASP vulnerabilities'
+model: Claude Sonnet 4
+include-custom-instructions: true
+tools: ['codebase', 'terminal', 'github']
+---
+```
 
 ### Agent Instructions
 
