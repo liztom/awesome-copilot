@@ -3,7 +3,7 @@ title: 'Copilot Configuration Basics'
 description: 'Learn how to configure GitHub Copilot at user, workspace, and repository levels to optimize your AI-assisted development experience.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-07
+lastUpdated: 2026-09-23
 estimatedReadingTime: '10 minutes'
 tags:
   - configuration
@@ -459,6 +459,10 @@ The model picker opens in a **full-screen view** with inline reasoning effort ad
 
 **Model family aliases** (v1.0.64+): Instead of typing a full model name, you can use short family aliases in the model setting: `opus`, `sonnet`, `haiku` (Anthropic), and `gpt`, `gemini` (Google/OpenAI). The CLI resolves the alias to the latest available model in that family. This is especially useful in scripts or configuration files where you want to track the best model in a family without hardcoding a version string. Recent models available include **Claude Opus 5** (v1.0.75+), the latest in Anthropic's Opus family for the most demanding tasks, **Grok 4.5** (v1.0.76+) from xAI, **Gemini 3.7 Flash** (v1.0.81+), and **Claude Fable 5.1** (v1.0.83+). **Grok 4.6** (v1.0.81+) also gains support for the `xhigh` reasoning effort level, one step above `high`, for the most demanding reasoning tasks. The `/model picker` also periodically retires older models no longer worth recommending — a recent cleanup removed several deprecated Claude and Gemini entries (v1.0.83+), so don't be surprised if a model you previously pinned disappears from the list.
 
+**GPT-6 model family (v1.0.85+)**: OpenAI's GPT-6 family is rolling out across Copilot surfaces. **GPT-6 Astra** landed first (v1.0.85+), followed by **GPT-6 Sol** and **GPT-6 Luna**, which reached general availability alongside the existing model comparison and pricing tables. Use the `gpt` family alias to automatically resolve to the latest available GPT-6 model without hardcoding a specific variant name.
+
+**Startup default routing tiers (v1.0.87+)**: Administrators can set user and managed startup defaults for the **Auto routing tier** — the tier Auto mode uses when evaluating and routing each request to an appropriate model. Organizations can enforce a **strict** tier default or leave it **user-overridable**, giving teams a policy lever over cost/quality tradeoffs for Auto mode sessions without requiring every session to explicitly pin a model.
+
 **Model fallback lists** *(v1.0.83+)*: Custom agents can set `model` to a list of several models instead of a single name. Copilot tries each one in order until it finds one available to your account — useful when your preferred model is temporarily rate-limited or not enrolled. Pair this with `model-policy: required` to keep the agent restricted to that list even if you try to switch models mid-session. See [Building Custom Agents](../building-custom-agents/) for the frontmatter syntax.
 
 **Plan mode model** *(v1.0.74+)*: When using plan mode (which blocks file mutations and keeps changes in a planning phase), you can assign a *separate* model specifically for planning — different from your regular session model. This lets you use a fast, cost-effective model for plan drafting while keeping a more capable model on standby for the implementation phase:
@@ -567,7 +571,7 @@ The `/fork` command (v1.0.45+) copies the current session into a **new independe
 /branch                  # alias for /fork (v1.0.64+)
 ```
 
-After forking, the new session is immediately active. Both sessions share the same history up to the fork point but accumulate changes independently from that moment forward. Use `/fork` to experiment with a risky refactor without abandoning your current working session. Since v1.0.47, forked sessions display their **origin session** name in the sessions dialog, making it easy to trace which session a fork came from.
+After forking, the new session is immediately active. Both sessions share the same history up to the fork point but accumulate changes independently from that moment forward. Use `/fork` to experiment with a risky refactor without abandoning your current working session. Since v1.0.47, forked sessions display their **origin session** name in the sessions dialog, making it easy to trace which session a fork came from. As of v1.0.88, `/fork` can also run **during an active turn**, without waiting for the agent to finish its current response, so you can branch off mid-task instead of pausing to let it complete first.
 
 The `/cd` command changes the working directory for the current session. Since v1.0.65, the working directory **persists when you resume a session** — if you restart the CLI and resume, you return to the same directory automatically. Changing directory also triggers discovery of custom agents in the new location, so switching to a different project loads its agents without a restart:
 
@@ -592,6 +596,8 @@ In v1.0.66+, you can pass a task description to `/worktree` to name the branch f
 This creates a branch named from your task description and begins working on it immediately, making it easy to spin up parallel work without stopping to think of a branch name.
 
 After the command runs, the session is inside the new worktree. Use this when you want to work on a second task in parallel without stashing changes or opening a new terminal. In v1.0.64+ you can also use the experimental `--worktree` flag at startup (`copilot -w [name]`) to create or reuse a worktree under `<repo>.worktrees/` before the session begins.
+
+**Custom worktree locations** *(v1.0.87+)*: A `worktreePathTemplate` setting controls where `/worktree`, `/move`, `/new`, and the `--worktree` flag create worktrees. Set a template such as `~/src/worktrees/{repo}/{branch}` using the `{repoPath}`, `{repo}`, `{branch}`, and `{branchSlug}` placeholders. Leaving it unset keeps the default layout, `<repo>.worktrees/`, with slashes in branch names flattened to dashes.
 
 The `/new-worktree` command *(v1.0.78+, experimental)* creates a new worktree and starts a **fresh conversation** in it — without inheriting the current session's history. This is useful when you want a completely clean slate for a new task in a parallel branch:
 
@@ -684,6 +690,10 @@ Use `/diagnose` when a session is behaving unexpectedly — it inspects session 
 **Inline image rendering** (v1.0.64+): The CLI can display images inline in the terminal when your terminal supports it. If an MCP tool, agent, or attachment returns an image, it is rendered directly in the conversation timeline rather than shown as a file path or URL. This works in terminals with image protocol support (such as iTerm2, Kitty, Wezterm, and tmux with appropriate configuration).
 
 **Voice dictation** *(v1.0.81+)*: Press **Ctrl+Space** to toggle voice dictation on or off, letting you speak a prompt instead of typing it.
+
+**Vim mode** *(v1.0.85+)*: Modal editing is available in the composer for everyone. Turn it on with `/vim` or by setting `editorMode` to `vim` in your config. The current mode (insert or normal) is shown while you type, matching the modal editing workflow Vim users expect.
+
+**`/config` sidebar** *(v1.0.85+)*: The `/config` command opens a sidebar configuration screen in the CLI, giving you a persistent panel for browsing and editing settings alongside your active conversation — an alternative to the full-screen `/settings` dialog.
 
 **Worktree switch reliability (v1.0.82+)**: If you start typing a new message while `/worktree` or `/move` is preparing a worktree switch, that message is no longer dropped when the switch completes.
 

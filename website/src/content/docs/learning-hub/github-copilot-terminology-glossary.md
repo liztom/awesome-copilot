@@ -3,7 +3,7 @@ title: 'GitHub Copilot Terminology Glossary'
 description: 'A quick reference guide defining common GitHub Copilot and platform-specific terms.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-07
+lastUpdated: 2026-09-23
 estimatedReadingTime: '8 minutes'
 tags:
   - glossary
@@ -286,6 +286,8 @@ A VS Code component (v1.136+) that lets multiple VS Code windows connect to the 
 **Example**: Starting a session in one VS Code window, then reconnecting to the same live session from a second window without losing state.
 
 **When to use**: When you want a consistent agent session shared across multiple editor windows, or when you want the same underlying agent behavior across VS Code, the CLI, and the Copilot app.
+
+**Remote Dev Containers (v1.139+)**: The agent host also supports running agent sessions inside a project's Dev Container on SSH, Tunnel, and WSL hosts (Agents Window only), letting agents build and test remote projects with the right tools and dependencies without duplicating toolchain setup locally. Enable it with the `chat.agentHost.devContainer.enabled` setting, then select **Use Dev Container** from the folder menu — the remote folder needs a supported Dev Container configuration and Docker available on the remote host.
 
 **Related terms**: [Agent](#agent), [Coding Agent](#coding-agent)
 

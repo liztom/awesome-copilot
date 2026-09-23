@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-23
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -50,6 +50,10 @@ The central hub of the Copilot app is the **My Work** view. This dashboard shows
 
 Instead of checking GitHub, your CLI, and VS Code for updates, everything is in one place.
 
+**Issues and Pull requests split** *(v1.1.23+)*: My Work is now split into separate **Issues** and **Pull requests** sections in the sidebar and navigation, and repositories can be browsed as dedicated pages. Repository Issues and Pull requests views can be edited, reordered, duplicated, and deleted, just like custom views in My Work — and an AI-assisted filter builder lets you describe the results you want and get a generated filter you can inspect, edit, or revert.
+
+**Restarting sessions** *(v1.1.23+)*: Use the `/restart-session` command to restart a chat or side chat conversation while preserving its history — useful when a session needs a clean environment without losing the context of what's already been discussed.
+
 ### Automations
 
 The Copilot app includes built-in automations that can run scheduled tasks for you using the same agentic technology. You can use templates out of the box or create your own.
@@ -71,6 +75,18 @@ This makes it easy to dispatch multiple agents and trust they won't interfere wi
 ### Running in the Background
 
 Closing the app's main window keeps it running in the background instead of quitting, with tray (Windows/Linux) or Dock (macOS) support to bring it back. This means scheduled automations and in-progress sessions keep running even when the window isn't open.
+
+### Local Sandboxing (Public Preview)
+
+**Local sandboxing** *(public preview)* lets you run the agent's shell commands in a sandbox restricted to the session's workspace, directly on your machine — an alternative to routing local sessions through a cloud sandbox. Enable it from a **project setting**, or toggle it for an active session with the `/sandbox` command.
+
+Project settings define the default for new local repository and working-tree sessions, and you can change sandboxing for an individual active session without changing the project default. In the app, sandbox project settings expose a subset of the controls available in the CLI:
+
+- **Filesystem**: Grant additional read-only or read/write access to specific paths, or deny paths
+- **Network**: Allow or block outbound internet and local network access
+- **Credentials**: Choose whether your Git and GitHub CLI credentials are available inside the sandbox
+
+The app can also prompt you to approve an individual command to run outside the sandbox when it needs broader access. Local sandbox settings are configured separately from the CLI's sandbox settings — enabling or configuring one does not change the other, since they are independent surfaces.
 
 ### Canvases
 
