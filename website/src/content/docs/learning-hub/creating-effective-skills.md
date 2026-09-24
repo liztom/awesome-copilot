@@ -3,7 +3,7 @@ title: 'Creating Effective Skills'
 description: 'Master the art of writing reusable, shareable skill folders that deliver consistent results across your team.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-07-13
+lastUpdated: 2026-09-24
 estimatedReadingTime: '9 minutes'
 tags:
   - skills
@@ -153,6 +153,8 @@ description: 'Generate comprehensive unit tests for the selected code, covering 
 argument-hint: 'Enter function, class, or file to test'
 ---
 ```
+
+**Namespaced skills** *(v1.0.86+)*: The CLI supports namespaced custom skills and ignored skill directories during discovery. This helps avoid naming collisions when multiple plugins or sources contribute skills with similar names, and lets you exclude specific directories from being scanned for skills.
 
 ## Real Examples from the Repository
 

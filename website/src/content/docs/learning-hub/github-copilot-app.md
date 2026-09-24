@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-24
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -91,6 +91,14 @@ For a hands-on guide to building canvases with `/create-canvas`, see [Working wi
 - Create, edit, or remove your own **personal skills** directly in the app, without hand-authoring a `SKILL.md` file
 
 This makes Customize a good starting point if you want to extend the app's capabilities but don't need the full `copilot plugin` CLI workflow described in [Installing and Using Plugins](../installing-and-using-plugins/).
+
+### Local Sandbox for Agent Commands
+
+*(v1.1.23+)* A project setting and `/sandbox` command let you run the agent's shell commands in a **local sandbox**, restricting filesystem access to the session's workspace. This mirrors the sandboxing available in the CLI (see [Copilot Configuration Basics](../copilot-configuration-basics/#cli-startup-flags)) and gives you an extra layer of protection when an agent is running commands you haven't reviewed yet.
+
+### Files and Generated Artifacts
+
+*(v1.1.21+)* Generated artifacts like Markdown files now open in the **Files** tab alongside your repository files, with a switcher between the two and an option to promote an artifact into the repository proper. This makes it easy to review agent-generated documents (plans, reports, summaries) in context before deciding whether they belong in version control.
 
 ### Agent Merge
 
