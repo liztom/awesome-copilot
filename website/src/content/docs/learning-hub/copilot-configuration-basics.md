@@ -457,7 +457,11 @@ The model picker opens in a **full-screen view** with inline reasoning effort ad
 
 **Auto mode and server-side model routing** (v1.0.43+): When you select **Auto** as your model, the CLI uses server-side model routing for real-time model selection. Instead of locking in a single model at session start, Auto mode evaluates each request and routes it to the most appropriate model dynamically. This means straightforward questions can be handled by a faster model while complex reasoning tasks are automatically escalated — without you needing to switch models manually.
 
-**Model family aliases** (v1.0.64+): Instead of typing a full model name, you can use short family aliases in the model setting: `opus`, `sonnet`, `haiku` (Anthropic), and `gpt`, `gemini` (Google/OpenAI). The CLI resolves the alias to the latest available model in that family. This is especially useful in scripts or configuration files where you want to track the best model in a family without hardcoding a version string. Recent models available include **Claude Opus 5** (v1.0.75+), the latest in Anthropic's Opus family for the most demanding tasks, **Grok 4.5** (v1.0.76+) from xAI, **Gemini 3.7 Flash** (v1.0.81+), and **Claude Fable 5.1** (v1.0.83+). **Grok 4.6** (v1.0.81+) also gains support for the `xhigh` reasoning effort level, one step above `high`, for the most demanding reasoning tasks. The `/model picker` also periodically retires older models no longer worth recommending — a recent cleanup removed several deprecated Claude and Gemini entries (v1.0.83+), so don't be surprised if a model you previously pinned disappears from the list.
+**Auto routing tiers** *(v1.0.87+)*: Auto mode now supports **routing tiers** with user and enterprise-managed startup defaults, including a strict, org-enforced policy and a user-overridable default. The CLI also **suggests a routing tier** based on the task at hand and lets you switch tiers with a shortcut or a click, and shows a brief feedback prompt after you manually switch away from a suggested tier — so you can confirm whether the suggestion was helpful. Note that the previously available **Fast** profile has been removed; a stored, exported, or resumed preference for it now falls back to **Balance**.
+
+**Model family aliases** (v1.0.64+): Instead of typing a full model name, you can use short family aliases in the model setting: `opus`, `sonnet`, `haiku` (Anthropic), and `gpt`, `gemini` (Google/OpenAI). The CLI resolves the alias to the latest available model in that family. This is especially useful in scripts or configuration files where you want to track the best model in a family without hardcoding a version string. Recent models available include **Claude Opus 5** (v1.0.75+), the latest in Anthropic's Opus family for the most demanding tasks, **Grok 4.5** (v1.0.76+) from xAI, **Gemini 3.7 Flash** (v1.0.81+), **Claude Fable 5.1** (v1.0.83+), **GPT-6 Sol** and **GPT-6 Luna** (v1.0.89+), and **GPT-6 Astra** (v1.0.85+). **Claude Opus 5.5** (v1.0.89+) is also now supported. **Grok 4.6** (v1.0.81+) also gains support for the `xhigh` reasoning effort level, one step above `high`, for the most demanding reasoning tasks. The `/model picker` also periodically retires older models no longer worth recommending — a recent cleanup removed several deprecated Claude and Gemini entries (v1.0.83+), so don't be surprised if a model you previously pinned disappears from the list.
+
+**Custom agent `reasoning-effort` on selection** *(v1.0.88+)*: A custom agent's `reasoning-effort` now applies as soon as the agent is selected, rather than only when its model is also chosen. An explicit `--reasoning-effort` flag still overrides the agent's setting, and if the selected model doesn't offer the requested level, the CLI reports this and leaves it unapplied.
 
 **Model fallback lists** *(v1.0.83+)*: Custom agents can set `model` to a list of several models instead of a single name. Copilot tries each one in order until it finds one available to your account — useful when your preferred model is temporarily rate-limited or not enrolled. Pair this with `model-policy: required` to keep the agent restricted to that list even if you try to switch models mid-session. See [Building Custom Agents](../building-custom-agents/) for the frontmatter syntax.
 
@@ -480,6 +484,18 @@ The `/settings` command (v1.0.61+) opens an interactive dialog to browse and edi
 ```
 
 The settings dialog supports search — type to filter settings by name. Changes take effect immediately.
+
+**`/config` sidebar** *(v1.0.85+)*: `/config` opens a dedicated **sidebar configuration screen**, giving you a persistent, always-visible panel for reviewing and adjusting settings alongside your active conversation instead of a full-screen dialog:
+
+```
+/config
+```
+
+**Vim mode** *(v1.0.85+)*: Modal editing is now available to everyone in the composer. Turn it on with `/vim`, or set `editorMode` to `vim` in `/settings`. The current mode (insert/normal) is shown while you type:
+
+```
+/vim
+```
 
 *(v1.0.70+)* The `/settings` command and the `/model` command both support **`--repo` and `--local` flags** for explicitly scoping which layer of settings you want to view or edit:
 
@@ -592,6 +608,8 @@ In v1.0.66+, you can pass a task description to `/worktree` to name the branch f
 This creates a branch named from your task description and begins working on it immediately, making it easy to spin up parallel work without stopping to think of a branch name.
 
 After the command runs, the session is inside the new worktree. Use this when you want to work on a second task in parallel without stashing changes or opening a new terminal. In v1.0.64+ you can also use the experimental `--worktree` flag at startup (`copilot -w [name]`) to create or reuse a worktree under `<repo>.worktrees/` before the session begins.
+
+**`worktreePathTemplate` setting** *(v1.0.87+)*: Controls where `/worktree`, `/move`, `/new`, and `--worktree` create new worktrees. Set a template such as `~/src/worktrees/{repo}/{branch}` in `/settings`; the placeholders `{repoPath}`, `{repo}`, `{branch}`, and `{branchSlug}` are supported. Leaving it unset keeps the default `<repo>.worktrees/` layout, with slashes in the branch name flattened to dashes.
 
 The `/new-worktree` command *(v1.0.78+, experimental)* creates a new worktree and starts a **fresh conversation** in it — without inheriting the current session's history. This is useful when you want a completely clean slate for a new task in a parallel branch:
 
@@ -734,6 +752,12 @@ The `/compact` command summarizes the conversation history to free up context wi
 > **Note**: Skills remain loaded and effective after `/compact`. You do not need to re-invoke them after compacting.
 
 > **ACP sessions (v1.0.39+)**: The `/compact`, `/context`, `/usage`, and `/env` commands are now available in ACP (Agent Coordination Protocol) sessions, allowing remote ACP clients to surface session details and manage context from within their own automated workflows.
+
+**Context management tools opt-in** *(v1.0.85+)*: Add `/settings` options to opt agents and subagents into context management tools, giving you more control over how context is curated during long sessions.
+
+**Concise transcript view** *(v1.0.85+)*: Set `transcriptView` to `"concise"` in `/settings` to group tool activity into expandable work summaries instead of showing every individual tool call inline — useful for keeping the timeline readable during sessions with heavy tool use.
+
+**Session and memory import** *(v1.0.85+)*: New session and memory import commands support the semantic JSONL interchange format, making it easier to bring session history and memory data in from other sources.
 
 The `/statusline` command (with `/footer` as an alias) lets you control which items appear in the terminal status bar. You can show or hide individual indicators like the working directory, current branch, effort level, context window usage, quota, and **active account username** (v1.0.43+). The **changes** toggle shows a running count of added/removed lines for the session — useful when tracking the scope of an ongoing edit. In v1.0.65+, there is also an opt-in **CI check status** indicator that shows the passing/running/failing state of CI checks for the current branch — enable it from the `/statusline` menu:
 

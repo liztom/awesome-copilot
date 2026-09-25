@@ -255,6 +255,8 @@ This opens an interactive list where each installed plugin and its components ar
 
 > **Dashboard available to everyone (v1.0.81+)**: The plugins dashboard (`/plugin`, `/mcp`, and `/skills`) is now on for all users by default. If you need to opt out, set `PLUGINS_DASHBOARD=false`, which also restores the legacy `copilot plugins` command. This opt-out was later removed in the same release, along with the legacy skills picker it kept alive — `/skills`, bare `/mcp`, and `/mcp show` (with no server name) always open the dashboard now, and `/mcp config` opens the dedicated MCP wizard.
 
+> **CLI command renames (v1.0.85+)**: `copilot instruction list` and `copilot lsp list` replace `copilot plugins list --kind instruction` and `copilot plugins list --kind lsp`. Similarly, `copilot plugin enable`/`copilot plugin disable`, `copilot mcp enable`/`copilot mcp disable`, and `copilot skill enable`/`copilot skill disable` replace the older `copilot plugins enable/disable --plugin|--mcp|--skill` flag-based syntax. `--json` output is also now available on `copilot plugin list`, `copilot plugin marketplace list`, and `copilot plugin marketplace browse` for scripting.
+
 ### Loading Plugins from a Local Directory
 
 You can load plugins directly from a local directory without installing them from a marketplace, using the `--plugin-dir` flag when starting Copilot:
