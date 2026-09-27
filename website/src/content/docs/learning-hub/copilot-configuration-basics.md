@@ -3,7 +3,7 @@ title: 'Copilot Configuration Basics'
 description: 'Learn how to configure GitHub Copilot at user, workspace, and repository levels to optimize your AI-assisted development experience.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-07
+lastUpdated: 2026-09-27
 estimatedReadingTime: '10 minutes'
 tags:
   - configuration
@@ -457,7 +457,9 @@ The model picker opens in a **full-screen view** with inline reasoning effort ad
 
 **Auto mode and server-side model routing** (v1.0.43+): When you select **Auto** as your model, the CLI uses server-side model routing for real-time model selection. Instead of locking in a single model at session start, Auto mode evaluates each request and routes it to the most appropriate model dynamically. This means straightforward questions can be handled by a faster model while complex reasoning tasks are automatically escalated — without you needing to switch models manually.
 
-**Model family aliases** (v1.0.64+): Instead of typing a full model name, you can use short family aliases in the model setting: `opus`, `sonnet`, `haiku` (Anthropic), and `gpt`, `gemini` (Google/OpenAI). The CLI resolves the alias to the latest available model in that family. This is especially useful in scripts or configuration files where you want to track the best model in a family without hardcoding a version string. Recent models available include **Claude Opus 5** (v1.0.75+), the latest in Anthropic's Opus family for the most demanding tasks, **Grok 4.5** (v1.0.76+) from xAI, **Gemini 3.7 Flash** (v1.0.81+), and **Claude Fable 5.1** (v1.0.83+). **Grok 4.6** (v1.0.81+) also gains support for the `xhigh` reasoning effort level, one step above `high`, for the most demanding reasoning tasks. The `/model picker` also periodically retires older models no longer worth recommending — a recent cleanup removed several deprecated Claude and Gemini entries (v1.0.83+), so don't be surprised if a model you previously pinned disappears from the list.
+**Model family aliases** (v1.0.64+): Instead of typing a full model name, you can use short family aliases in the model setting: `opus`, `sonnet`, `haiku` (Anthropic), and `gpt`, `gemini` (Google/OpenAI). The CLI resolves the alias to the latest available model in that family. This is especially useful in scripts or configuration files where you want to track the best model in a family without hardcoding a version string. Recent models available include **Claude Opus 5** (v1.0.75+), the latest in Anthropic's Opus family for the most demanding tasks, **Grok 4.5** (v1.0.76+) from xAI, **Gemini 3.7 Flash** (v1.0.81+), **Claude Fable 5.1** (v1.0.83+), and **GPT-6 Astra** (v1.0.85+). **Grok 4.6** (v1.0.81+) also gains support for the `xhigh` reasoning effort level, one step above `high`, for the most demanding reasoning tasks. The `/model picker` also periodically retires older models no longer worth recommending — a recent cleanup removed several deprecated Claude and Gemini entries (v1.0.83+), so don't be surprised if a model you previously pinned disappears from the list.
+
+**Auto routing tiers** *(v1.0.87+)*: When you select **Auto** as your model, you can now set a startup default for its routing tier — **Efficiency**, **Balance**, or **Intelligence** — instead of always starting from the same tier each session. Organizations can enforce a strict tier via policy, or allow users to override the default. Set your preferred tier in `/settings` under the Auto model options.
 
 **Model fallback lists** *(v1.0.83+)*: Custom agents can set `model` to a list of several models instead of a single name. Copilot tries each one in order until it finds one available to your account — useful when your preferred model is temporarily rate-limited or not enrolled. Pair this with `model-policy: required` to keep the agent restricted to that list even if you try to switch models mid-session. See [Building Custom Agents](../building-custom-agents/) for the frontmatter syntax.
 
@@ -491,6 +493,10 @@ The settings dialog supports search — type to filter settings by name. Changes
 ```
 
 These flags mirror the **Repo** and **Repo (local)** scope tabs available in the `/settings` dashboard (v1.0.71+), making it easier to manage per-repository vs. user-global configuration without ambiguity. In v1.0.71+, the `/settings` dashboard also shows **Repo** and **Repo (local)** tabs alongside the existing user-level view, giving you a unified place to see which settings are applied at each layer.
+
+**`/config` sidebar (v1.0.85+)**: Run `/config` to open a dedicated sidebar configuration screen without leaving your session — a lighter-weight alternative to `/settings` for quick lookups and edits.
+
+**Vim mode (v1.0.85+)**: Turn on modal editing in the composer with `/vim`, or set `editorMode` to `vim` in your config file. The current mode (normal/insert) is shown while you type, so you always know which mode you're in.
 
 GitHub Copilot CLI has two commands for managing session state, with distinct behaviours:
 
@@ -846,6 +852,8 @@ These flags apply only to the current invocation — your persisted sandbox pref
 **`worktreeBaseRef` setting** *(v1.0.79-8+)*: Controls whether `/worktree`, `/worktree new`, and the `--worktree` startup flag create the new worktree from `HEAD` or from the remote default branch. All three now default to `HEAD`; previously `--worktree` defaulted to starting from the remote default branch. Set this in `/settings` if you want worktrees to branch from the remote default instead.
 
 > **Breaking change — sandbox network isolation (v1.0.83+)**: On macOS and Linux, sandboxed commands can no longer reach services running on your own machine, including a server the sandboxed command itself starts on `127.0.0.1`. This means test suites that bind a local port will fail inside the sandbox. Turn on **Allow local network** in `/sandbox` to restore access to localhost. On Linux, sandboxing also now requires `slirp4netns`, `nsenter`, `iptables`, `ip6tables`, `iptables-restore`, and `ip6tables-restore` on `PATH` — install these if sandboxed commands start failing to launch. Additionally, Linux sandboxes now restrict network egress to the configured HTTP(S) proxy when one is set; this proxy mode requires `slirp4netns`, `util-linux` 2.35+, `iptables`, and `/dev/net/tun` access.
+
+**Network host allow/deny rules** *(v1.0.85+)*: `/sandbox` now supports per-host **allow** and **deny** rules for network access, layered on top of your configured upstream proxy instead of replacing it. Use this to permit a specific API host while otherwise keeping the sandbox's default network policy, without having to route everything through a custom proxy.
 
 The `--attachment` flag (available in prompt mode, `-p`) lets you attach files — images or native documents — to the initial prompt in non-interactive mode:
 

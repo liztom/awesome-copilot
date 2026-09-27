@@ -3,7 +3,7 @@ title: 'Getting Started with the GitHub Copilot app'
 description: 'Learn about the GitHub Copilot app, a desktop experience built for agent-native development. Understand its key features and who it''s for.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-02
+lastUpdated: 2026-09-27
 estimatedReadingTime: '8 minutes'
 tags:
   - copilot-app
@@ -86,11 +86,15 @@ For a hands-on guide to building canvases with `/create-canvas`, see [Working wi
 
 **Customize** *(v1.1.13+)* is a single place in the Copilot app to browse and manage everything that extends your agents: plugins, skills, MCP servers, and canvases. Instead of hunting through separate settings pages, open **Customize** to:
 
-- Browse **Featured** integrations (for example Azure DevOps or Figma) and install them with one click
+- Browse **Featured** integrations (for example Azure DevOps, Figma, or Sentry) and install them with one click
 - See what's already **Installed**, with consistent icons and source labels across plugin, skill, MCP server, canvas, and connector types
 - Create, edit, or remove your own **personal skills** directly in the app, without hand-authoring a `SKILL.md` file
 
 This makes Customize a good starting point if you want to extend the app's capabilities but don't need the full `copilot plugin` CLI workflow described in [Installing and Using Plugins](../installing-and-using-plugins/).
+
+### Local Sandbox for Agent Commands
+
+**Local sandbox** *(v1.1.23+)* is a project setting (and matching `/sandbox` command) that restricts the shell commands an agent runs to the session's own workspace, rather than the full filesystem. Turn it on per-project when you want an extra safety boundary around autonomous sessions without giving up local execution speed.
 
 ### Agent Merge
 
