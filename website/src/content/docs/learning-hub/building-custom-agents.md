@@ -73,6 +73,8 @@ tools: ['codebase', 'terminal', 'github']
 
 **model** (recommended): The AI model that powers the agent. Choose based on the complexity of the task—use more capable models for nuanced reasoning.
 
+*(v1.0.88+)* A custom agent's `reasoning-effort` setting is applied when the agent is selected, alongside its model. An explicit `--reasoning-effort` flag still takes precedence, and a level the model does not offer is reported and left unapplied.
+
 > **Model fallback lists (v1.0.83+)**: `model` can list several models, tried in order until one is available to you — useful if your preferred model is temporarily rate-limited or not enrolled for your account. Pair it with `model-policy: required` to keep the agent restricted to that list even if the user tries to switch models mid-session:
 >
 > ```yaml
