@@ -3,7 +3,7 @@ title: 'Copilot Configuration Basics'
 description: 'Learn how to configure GitHub Copilot at user, workspace, and repository levels to optimize your AI-assisted development experience.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-07
+lastUpdated: 2026-10-01
 estimatedReadingTime: '10 minutes'
 tags:
   - configuration
@@ -304,6 +304,8 @@ When writing TypeScript code:
 
 **When to use**: For project-wide coding standards, architectural patterns, or technology-specific conventions that should influence all suggestions.
 
+**Claude Code rule files** *(v1.0.89+)*: Copilot CLI also loads rule files from `.claude/rules` as custom instructions, so repositories that already keep rules there for Claude Code work without duplication.
+
 ## Setting Up Team Configuration
 
 Follow these steps to establish effective team-wide Copilot configuration:
@@ -447,6 +449,8 @@ These files follow the same format as `config.json` and are loaded after the glo
 
 > **Important (v1.0.36+)**: Custom agents, skills, and commands placed in `~/.claude/` (the Claude Code user directory) are **no longer loaded** by GitHub Copilot CLI. Only `~/.claude/settings.json` is read for configuration. If you previously stored personal agents or skills in `~/.claude/`, move them to the supported locations: `~/.copilot/agents/` for user-level agents, `~/.copilot/skills/` or `~/.agents/skills/` for personal skills, or `.github/agents/` and `.github/skills/` in your repositories for project-level customizations.
 
+The `--mcp-github-auth` flag *(v1.0.90+)* scopes your GitHub account authentication to approved MCP server origins, so GitHub credentials are only sent to servers you have approved.
+
 ### Model Picker
 
 The model picker opens in a **full-screen view** with inline reasoning effort adjustment. Use the **← / →** arrow keys to change the reasoning effort level (`low`, `medium`, `high`) directly from the picker without leaving the session. The current reasoning effort level is also displayed in the model header (e.g., `claude-sonnet-4.6 (high)`) so you always know which level is active.
@@ -456,6 +460,8 @@ The model picker opens in a **full-screen view** with inline reasoning effort ad
 **Session-scoped model selection** *(v1.0.79+)*: `/model` now changes the model for the **current session only** by default. Use `/config model` to set the default model for future sessions — previously `/model` changed both at once, which made it easy to accidentally change your global default while just trying something out in one session.
 
 **Auto mode and server-side model routing** (v1.0.43+): When you select **Auto** as your model, the CLI uses server-side model routing for real-time model selection. Instead of locking in a single model at session start, Auto mode evaluates each request and routes it to the most appropriate model dynamically. This means straightforward questions can be handled by a faster model while complex reasoning tasks are automatically escalated — without you needing to switch models manually.
+
+**Auto routing tiers** *(v1.0.89+)*: Auto suggests a routing tier and lets you switch it with a shortcut or a click. The unsupported Fast profile was removed; a stored Fast preference falls back to Balance. Model IDs also autocomplete in `/model` and `/model plan` argument pickers.
 
 **Model family aliases** (v1.0.64+): Instead of typing a full model name, you can use short family aliases in the model setting: `opus`, `sonnet`, `haiku` (Anthropic), and `gpt`, `gemini` (Google/OpenAI). The CLI resolves the alias to the latest available model in that family. This is especially useful in scripts or configuration files where you want to track the best model in a family without hardcoding a version string. Recent models available include **Claude Opus 5** (v1.0.75+), the latest in Anthropic's Opus family for the most demanding tasks, **Grok 4.5** (v1.0.76+) from xAI, **Gemini 3.7 Flash** (v1.0.81+), and **Claude Fable 5.1** (v1.0.83+). **Grok 4.6** (v1.0.81+) also gains support for the `xhigh` reasoning effort level, one step above `high`, for the most demanding reasoning tasks. The `/model picker` also periodically retires older models no longer worth recommending — a recent cleanup removed several deprecated Claude and Gemini entries (v1.0.83+), so don't be surprised if a model you previously pinned disappears from the list.
 
