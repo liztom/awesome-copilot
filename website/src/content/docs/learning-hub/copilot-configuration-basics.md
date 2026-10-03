@@ -3,7 +3,7 @@ title: 'Copilot Configuration Basics'
 description: 'Learn how to configure GitHub Copilot at user, workspace, and repository levels to optimize your AI-assisted development experience.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-07
+lastUpdated: 2026-10-03
 estimatedReadingTime: '10 minutes'
 tags:
   - configuration
@@ -840,6 +840,10 @@ These flags apply only to the current invocation — your persisted sandbox pref
 **`allowDevToolAccess` sandbox setting** *(v1.0.78+ as `allowDevToolCaches`, renamed to `allowDevToolAccess` in v1.0.79 — breaking change)*: When the sandbox is enabled, this setting grants sandboxed builds access to toolchain caches, registries, config files, and installs (npm cache, pip cache, Go module cache, etc.) so builds work without extra setup. Set it to `false` in `/settings` to opt out if you want a stricter sandbox that blocks all toolchain access.
 
 > **Breaking change (v1.0.79)**: The setting was renamed from `allowDevToolCaches` to `allowDevToolAccess`. If you previously set `allowDevToolCaches` to `false` to opt out, update your `settings.json` to use `allowDevToolAccess` — the old key is silently ignored.
+
+**Sandbox CA management** *(v1.0.91+)*: Use `copilot sandbox ca` commands to check, create, trust, rotate, and remove the sandbox proxy CA trust, including unattended setup on Windows. In the interactive `/sandbox` dialog, `/sandbox ca install` is now split into `create` and `trust`. Sandboxed shell commands also offer a network bypass prompt whenever the proxy blocks a destination *(v1.0.92+)*.
+
+**Local or cloud environment picker** *(v1.0.92-3, pre-release)*: Press **Ctrl+E** before starting a conversation to choose whether the run happens locally or in the cloud.
 
 **Sandbox auth settings** *(v1.0.79-8+, breaking change)*: The `/sandbox` configuration dialog now groups git, `gh`, and (on macOS) keychain settings under a new **Auth** tab. The underlying settings keys moved from `sandbox.gitAuth`/`sandbox.ghAuth` to `sandbox.auth.git`/`sandbox.auth.gh`. There is no automatic migration — the old keys are silently ignored in settings files, and SDK requests that still send them are rejected as invalid. Update any saved configuration to the new key names.
 
