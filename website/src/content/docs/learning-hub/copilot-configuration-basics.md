@@ -3,7 +3,7 @@ title: 'Copilot Configuration Basics'
 description: 'Learn how to configure GitHub Copilot at user, workspace, and repository levels to optimize your AI-assisted development experience.'
 authors:
   - GitHub Copilot Learning Hub Team
-lastUpdated: 2026-09-07
+lastUpdated: 2026-10-11
 estimatedReadingTime: '10 minutes'
 tags:
   - configuration
@@ -846,6 +846,12 @@ These flags apply only to the current invocation — your persisted sandbox pref
 **`worktreeBaseRef` setting** *(v1.0.79-8+)*: Controls whether `/worktree`, `/worktree new`, and the `--worktree` startup flag create the new worktree from `HEAD` or from the remote default branch. All three now default to `HEAD`; previously `--worktree` defaulted to starting from the remote default branch. Set this in `/settings` if you want worktrees to branch from the remote default instead.
 
 > **Breaking change — sandbox network isolation (v1.0.83+)**: On macOS and Linux, sandboxed commands can no longer reach services running on your own machine, including a server the sandboxed command itself starts on `127.0.0.1`. This means test suites that bind a local port will fail inside the sandbox. Turn on **Allow local network** in `/sandbox` to restore access to localhost. On Linux, sandboxing also now requires `slirp4netns`, `nsenter`, `iptables`, `ip6tables`, `iptables-restore`, and `ip6tables-restore` on `PATH` — install these if sandboxed commands start failing to launch. Additionally, Linux sandboxes now restrict network egress to the configured HTTP(S) proxy when one is set; this proxy mode requires `slirp4netns`, `util-linux` 2.35+, `iptables`, and `/dev/net/tun` access.
+
+**Sandbox available to everyone** *(v1.0.93+)*: Command sandboxing is now available to all users through `/sandbox` and `--sandbox`. Sandbox local-network allowlists include localhost and loopback hosts, and sandboxed shells withhold the ambient `GITHUB_TOKEN` unless you configure it explicitly *(v1.0.92+)*. Credential injection hosts can be set with the `injectHosts` keys *(v1.0.95+)*.
+
+**`copilot config` subcommands** *(v1.0.92+)*: Use `copilot config` to list, read, set, and remove settings from the command line. User settings are read only from `~/.copilot/settings.json` *(v1.0.93+)*; user-setting keys left in `~/.copilot/config.json` are ignored.
+
+**Enterprise policy controls** *(v1.0.93+)*: Administrators can enforce managed domain boundaries with `permissions.limitTo`, and managed policy can disable Assisted Permissions to keep sessions in Manual Approval mode *(v1.0.94+)*.
 
 The `--attachment` flag (available in prompt mode, `-p`) lets you attach files — images or native documents — to the initial prompt in non-interactive mode:
 
