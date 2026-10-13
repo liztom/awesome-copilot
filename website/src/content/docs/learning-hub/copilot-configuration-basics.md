@@ -847,6 +847,20 @@ These flags apply only to the current invocation — your persisted sandbox pref
 
 > **Breaking change — sandbox network isolation (v1.0.83+)**: On macOS and Linux, sandboxed commands can no longer reach services running on your own machine, including a server the sandboxed command itself starts on `127.0.0.1`. This means test suites that bind a local port will fail inside the sandbox. Turn on **Allow local network** in `/sandbox` to restore access to localhost. On Linux, sandboxing also now requires `slirp4netns`, `nsenter`, `iptables`, `ip6tables`, `iptables-restore`, and `ip6tables-restore` on `PATH` — install these if sandboxed commands start failing to launch. Additionally, Linux sandboxes now restrict network egress to the configured HTTP(S) proxy when one is set; this proxy mode requires `slirp4netns`, `util-linux` 2.35+, `iptables`, and `/dev/net/tun` access.
 
+**Sandbox updates (v1.0.92–v1.0.96)**:
+
+- Command sandboxing is available to all users via `/sandbox` and `--sandbox` *(v1.0.93+)*.
+- Sandboxed shells withhold the ambient `GITHUB_TOKEN` unless you explicitly configure it *(v1.0.92+)*.
+- Sandbox local-network allowlists include localhost and loopback hosts *(v1.0.93+)*.
+- `/add-dir` also grants sandbox access to the added directory for the current session *(v1.0.96+)*.
+- The interactive sandbox settings suggest possible environment secrets and let you add masking hosts before saving *(v1.0.96+)*, and `copilot config` supports sandbox credential `injectHosts` keys *(v1.0.95+)*.
+
+**`copilot config` subcommands** *(v1.0.92+)*: Use `copilot config` to list, read, set, and remove settings from the command line. User settings are read only from `~/.copilot/settings.json`; user-setting keys left in `~/.copilot/config.json` are ignored *(v1.0.93+)*.
+
+**Permissions and managed policy**: The timeline shows whether you, Assisted Permissions, policy, or an unattended fallback made each permission decision *(v1.0.96+)*. Enterprises can enforce managed domain boundaries for network requests with `permissions.limitTo` *(v1.0.93+)* and can disable Assisted Permissions to keep sessions in Manual Approval mode *(v1.0.94+)*.
+
+**Other recent CLI changes**: MCP server configuration changes apply between turns without restarting the session *(v1.0.93+)*; model IDs in `/model` and `/config model` are case-insensitive *(v1.0.96+)*; and `Ctrl+E` before the first message switches between local and cloud runs *(v1.0.92+)*.
+
 The `--attachment` flag (available in prompt mode, `-p`) lets you attach files — images or native documents — to the initial prompt in non-interactive mode:
 
 **Browser-based OAuth login** *(v1.0.77+)*: `copilot login` now defaults to the browser (web) flow on local interactive terminals. A browser tab opens, you authenticate with GitHub, and the CLI is authorized without typing a device code. On remote or headless terminals (SSH sessions, CI), device code remains the default. You can force a specific flow with `--web-flow` or `--device-code`, or choose interactively with the `/login` command:
